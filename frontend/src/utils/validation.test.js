@@ -15,6 +15,16 @@ describe('Username Validation', () => {
         expect(validateUsername(emptyUsername)).toBe('Tên đăng nhập không được để trống');
     });
 
-    // (Bạn sẽ thêm các test case khác ở đây sau)
+    test('TC2: should return an error if username is too short (less than 3 chars)', () => {
+        expect(validateUsername('ab')).toBe('Tên đăng nhập phải có ít nhất 3 ký tự');
+    });
+
+    test('TC3: should return an error if username contains invalid characters', () => {
+        expect(validateUsername('test user!')).toBe('Tên đăng nhập chỉ được chứa chữ, số, và các ký tự _, ., -');
+    });
+
+    test('TC4: should return an empty string for a valid username', () => {
+        expect(validateUsername('valid-user_123')).toBe('');
+    });
 
 });

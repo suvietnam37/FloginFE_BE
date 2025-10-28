@@ -1,8 +1,10 @@
+import LoginPage from './pages/LoginPage/LoginPage';
+
 function App() {
-  return (
-    <div>
-      <h1>Flogin Application</h1>
-    </div>
-  );
+    return (
+        <div className="App">
+            <LoginPage />
+        </div>
+    );
 }
 export default App;

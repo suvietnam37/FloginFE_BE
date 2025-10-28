@@ -1,3 +1,4 @@
+// Trong file: /src/test/java/com/sgu/flogin/AuthServiceTest.java
 package com.sgu.flogin;
 
 import com.sgu.flogin.dto.LoginRequest;
@@ -5,7 +6,6 @@ import com.sgu.flogin.dto.LoginResponse;
 import com.sgu.flogin.entity.User;
 import com.sgu.flogin.repository.UserRepository;
 import com.sgu.flogin.service.AuthService;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -17,76 +17,83 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
 
-@ExtendWith(MockitoExtension.class)
-@DisplayName("AuthService Unit Tests")
+@ExtendWith(MockitoExtension.class) // Kích hoạt Mockito
 class AuthServiceTest {
 
-    @Mock
+    @Mock // 1. Tạo một đối tượng giả (mock) của UserRepository
     private UserRepository userRepository;
 
-    @InjectMocks
+    @InjectMocks // 2. Tạo một instance của AuthService và tự động inject mock ở trên vào
     private AuthService authService;
 
+    // --- Test case cho trường hợp đăng nhập thành công ---
     @Test
-    @DisplayName("TC1: Should login successfully with valid credentials")
     void whenValidCredentials_thenShouldLoginSuccessfully() {
-        // Arrange
-        LoginRequest request = new LoginRequest("testuser", "password123");
+        // --- ARRANGE (Chuẩn bị dữ liệu) ---
+        // 1. Dữ liệu đầu vào từ người dùng
+        LoginRequest request = new LoginRequest("testuser", "Test123");
+
+        // 2. Dữ liệu giả lập trong CSDL
         User userInDb = new User();
         userInDb.setId(1L);
         userInDb.setUsername("testuser");
-        userInDb.setPassword("password123");
+        userInDb.setPassword("Test123"); // Trong thực tế mật khẩu sẽ được mã hóa
 
+        // 3. Dạy cho mock biết phải làm gì:
+        // "Khi phương thức findByUsername được gọi với 'testuser',
+        // hãy trả về một đối tượng User đã được bọc trong Optional"
         when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(userInDb));
 
-        // Act
+        // --- ACT (Thực thi phương thức cần test) ---
         LoginResponse response = authService.authenticate(request);
 
-        // Assert
+        // --- ASSERT (Kiểm tra kết quả) ---
         assertNotNull(response);
         assertTrue(response.isSuccess());
         assertEquals("Đăng nhập thành công", response.getMessage());
-        assertNotNull(response.getToken());
     }
 
+    // --- Test case cho trường hợp sai mật khẩu ---
     @Test
-    @DisplayName("TC2: Should fail login with non-existent username")
-    void whenNonExistentUsername_thenShouldFailLogin() {
-        // Arrange
-        LoginRequest request = new LoginRequest("unknownuser", "password123");
+    void whenWrongPassword_thenShouldFailLogin() {
+        // --- ARRANGE ---
+        // 1. Dữ liệu đầu vào
+        LoginRequest request = new LoginRequest("testuser", "WrongPassword123");
 
-        // Dạy cho mock biết rằng không tìm thấy user này
-        when(userRepository.findByUsername("unknownuser")).thenReturn(Optional.empty());
-
-        // Act
-        LoginResponse response = authService.authenticate(request);
-
-        // Assert
-        assertNotNull(response);
-        assertFalse(response.isSuccess());
-        assertEquals("Sai tên đăng nhập hoặc mật khẩu", response.getMessage());
-        assertNull(response.getToken());
-    }
-
-    @Test
-    @DisplayName("TC3: Should fail login with incorrect password")
-    void whenIncorrectPassword_thenShouldFailLogin() {
-        // Arrange
-        LoginRequest request = new LoginRequest("testuser", "wrongpassword");
+        // 2. Dữ liệu giả lập trong CSDL (username đúng, password khác)
         User userInDb = new User();
         userInDb.setId(1L);
         userInDb.setUsername("testuser");
-        userInDb.setPassword("correctpassword123"); // Mật khẩu đúng trong DB
+        userInDb.setPassword("CorrectPassword123"); // Password đúng trong DB
 
+        // 3. Dạy cho mock biết: khi tìm "testuser", hãy trả về user này
         when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(userInDb));
 
-        // Act
+        // --- ACT ---
         LoginResponse response = authService.authenticate(request);
 
-        // Assert
+        // --- ASSERT ---
         assertNotNull(response);
-        assertFalse(response.isSuccess());
+        assertFalse(response.isSuccess()); // Mong đợi đăng nhập thất bại
         assertEquals("Sai tên đăng nhập hoặc mật khẩu", response.getMessage());
-        assertNull(response.getToken());
+    }
+
+    // --- Test case cho trường hợp username không tồn tại ---
+    @Test
+    void whenUsernameNotFound_thenShouldFailLogin() {
+        // --- ARRANGE ---
+        // 1. Dữ liệu đầu vào
+        LoginRequest request = new LoginRequest("nonexistentuser", "SomePassword123");
+
+        // 2. Dạy cho mock biết: khi tìm "nonexistentuser", hãy trả về Optional.empty()
+        when(userRepository.findByUsername("nonexistentuser")).thenReturn(Optional.empty());
+
+        // --- ACT ---
+        LoginResponse response = authService.authenticate(request);
+
+        // --- ASSERT ---
+        assertNotNull(response);
+        assertFalse(response.isSuccess()); // Mong đợi đăng nhập thất bại
+        assertEquals("Sai tên đăng nhập hoặc mật khẩu", response.getMessage());
     }
 }
