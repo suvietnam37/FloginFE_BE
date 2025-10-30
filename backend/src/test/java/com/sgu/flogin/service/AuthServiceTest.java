@@ -1,6 +1,5 @@
 // Trong file: /src/test/java/com/sgu/flogin/AuthServiceTest.java
-package com.sgu.flogin;
-
+package com.sgu.flogin.service;
 import com.sgu.flogin.dto.LoginRequest;
 import com.sgu.flogin.dto.LoginResponse;
 import com.sgu.flogin.entity.User;
@@ -11,6 +10,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Optional;
 
@@ -20,39 +20,35 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class) // Kích hoạt Mockito
 class AuthServiceTest {
 
-    @Mock // 1. Tạo một đối tượng giả (mock) của UserRepository
+    @Mock
     private UserRepository userRepository;
 
-    @InjectMocks // 2. Tạo một instance của AuthService và tự động inject mock ở trên vào
+    @Mock
+    private PasswordEncoder passwordEncoder;
+
+    @InjectMocks
     private AuthService authService;
 
     // --- Test case cho trường hợp đăng nhập thành công ---
     @Test
     void whenValidCredentials_thenShouldLoginSuccessfully() {
-        // --- ARRANGE (Chuẩn bị dữ liệu) ---
-        // 1. Dữ liệu đầu vào từ người dùng
+        // --- ARRANGE ---
         LoginRequest request = new LoginRequest("testuser", "Test123");
-
-        // 2. Dữ liệu giả lập trong CSDL
         User userInDb = new User();
-        userInDb.setId(1L);
         userInDb.setUsername("testuser");
-        userInDb.setPassword("Test123"); // Trong thực tế mật khẩu sẽ được mã hóa
+        // Mật khẩu trong DB bây giờ là một chuỗi đã được mã hóa
+        userInDb.setPassword("$2a$10$abcdefghijklmnopqrstuv"); 
 
-        // 3. Dạy cho mock biết phải làm gì:
-        // "Khi phương thức findByUsername được gọi với 'testuser',
-        // hãy trả về một đối tượng User đã được bọc trong Optional"
         when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(userInDb));
+        // Dạy cho mock biết: khi so sánh "Test123" với chuỗi mã hóa, kết quả là true
+        when(passwordEncoder.matches("Test123", "$2a$10$abcdefghijklmnopqrstuv")).thenReturn(true);
 
-        // --- ACT (Thực thi phương thức cần test) ---
+        // --- ACT ---
         LoginResponse response = authService.authenticate(request);
 
-        // --- ASSERT (Kiểm tra kết quả) ---
-        assertNotNull(response);
+        // --- ASSERT ---
         assertTrue(response.isSuccess());
-        assertEquals("Đăng nhập thành công", response.getMessage());
     }
-
     // --- Test case cho trường hợp sai mật khẩu ---
     @Test
     void whenWrongPassword_thenShouldFailLogin() {

@@ -1,9 +1,12 @@
 // Trong file: pages/LoginPage/LoginPage.jsx
 import React, { useState } from 'react';
-import { validateUsername } from '../../utils/validation';
-import authService from '../../services/authService'; // BƯỚC 1: Import service
+import { useNavigate } from 'react-router-dom';
+import { validateUsername, validatePassword } from '../../utils/validation';
+import authService from '../../services/authService';
 
 function LoginPage() {
+    const navigate = useNavigate();
+
     const [formData, setFormData] = useState({
         username: '',
         password: '',
@@ -20,17 +23,18 @@ function LoginPage() {
     // BƯỚC 2: Chuyển hàm thành async
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setApiMessage(''); // Xóa thông báo cũ mỗi khi submit
+        setApiMessage('');
 
         const usernameError = validateUsername(formData.username);
-        // (Thêm passwordError ở đây sau)
+        const passwordError = validatePassword(formData.password);
 
-        if (usernameError) {
-            setErrors({ username: usernameError });
-            return; // Dừng lại nếu có lỗi validation
+        if (usernameError || passwordError) {
+            setErrors({
+                username: usernameError,
+                password: passwordError,
+            });
+            return;
         }
-
-        setErrors({});
 
         // BƯỚC 3: Gọi API bằng try...catch
         try {
@@ -41,7 +45,8 @@ function LoginPage() {
             console.log('Login successful:', response.data);
             setApiMessage({ type: 'success', text: response.data.message });
 
-            // Ở đây sau này chúng ta sẽ lưu token và chuyển trang
+            // Điều hướng đến trang products sau khi thành công
+            navigate('/products');
             // localStorage.setItem('token', response.data.token);
 
         } catch (error) {
@@ -65,7 +70,7 @@ function LoginPage() {
                 <div>
                     <label>Mật khẩu:</label>
                     <input type="password" name="password" value={formData.password} onChange={handleChange}/>
-                    {/* {errors.password && <p style={{ color: 'red' }}>{errors.password}</p>} */}
+                    {errors.password && <p style={{ color: 'red' }}>{errors.password}</p>}
                 </div>
                 <button type="submit">Đăng nhập</button>
             </form>

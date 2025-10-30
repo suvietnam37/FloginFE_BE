@@ -1,20 +1,15 @@
 // Trong file: utils/validation.test.js
 
-// 1. Import hàm cần test (hàm này chưa tồn tại)
-import { validateUsername } from './validation';
+// Import hàm cần test
+import { validatePassword, validateUsername } from './validation';
 
-// 2. Bọc các test case trong một khối describe
+// Tạo mô tả cho nhóm test case về hàm validateUsername
 describe('Username Validation', () => {
-
-    // 3. Viết test case đầu tiên
+    // Viết các test case cho hàm validateUsername
     test('TC1: should return an error if username is empty', () => {
-        // ARRANGE: Dữ liệu đầu vào là một chuỗi rỗng
         const emptyUsername = '';
-
-        // ACT & ASSERT: Gọi hàm và mong đợi nó trả về một thông báo lỗi cụ thể
         expect(validateUsername(emptyUsername)).toBe('Tên đăng nhập không được để trống');
     });
-
     test('TC2: should return an error if username is too short (less than 3 chars)', () => {
         expect(validateUsername('ab')).toBe('Tên đăng nhập phải có ít nhất 3 ký tự');
     });
@@ -27,4 +22,23 @@ describe('Username Validation', () => {
         expect(validateUsername('valid-user_123')).toBe('');
     });
 
+});
+
+// Viết các test case cho hàm validatePassword
+describe('Password Validation', () => {
+    test('TC1: should return an error if password is too short (less than 6 chars)', () => {
+        expect(validatePassword('123ab')).toBe('Mật khẩu phải có ít nhất 6 ký tự');
+    });
+
+    test('TC2: should return an error if password does not contain a number', () => {
+        expect(validatePassword('abcdef')).toBe('Mật khẩu phải chứa ít nhất một chữ số');
+    });
+
+    test('TC3: should return an error if password does not contain a letter', () => {
+        expect(validatePassword('123456')).toBe('Mật khẩu phải chứa ít nhất một chữ cái');
+    });
+
+    test('TC4: should return an empty string for a valid password', () => {
+        expect(validatePassword('validPass123')).toBe('');
+    });
 });
