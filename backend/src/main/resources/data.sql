@@ -1,1 +1,0 @@
-INSERT INTO users (username, password) VALUES ('testuser', '$2a$10$N03iJ.EIXhfk8dI425uS5eT8GvFun5oYJ02PC6eyvLMIIO7sGe.UC') ON CONFLICT (username) DO NOTHING;
