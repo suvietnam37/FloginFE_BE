@@ -1,44 +1,55 @@
-// Trong file: utils/validation.test.js
-
-// Import hàm cần test
 import { validatePassword, validateUsername } from './validation';
 
-// Tạo mô tả cho nhóm test case về hàm validateUsername
-describe('Username Validation', () => {
-    // Viết các test case cho hàm validateUsername
-    test('TC1: should return an error if username is empty', () => {
+describe('Username Validation Tests', () => {
+
+    test('TC1: Test username rỗng', () => {
         const emptyUsername = '';
         expect(validateUsername(emptyUsername)).toBe('Tên đăng nhập không được để trống');
     });
-    test('TC2: should return an error if username is too short (less than 3 chars)', () => {
+
+    test('TC2: Test username quá ngắn', () => {
         expect(validateUsername('ab')).toBe('Tên đăng nhập phải có ít nhất 3 ký tự');
     });
 
-    test('TC3: should return an error if username contains invalid characters', () => {
+    test('TC3: Test username quá dài', () => {
+        const longUsername = 'a'.repeat(51);
+        expect(validateUsername(longUsername)).toBe('Tên đăng nhập không được vượt quá 50 ký tự');
+    });
+
+    test('TC4: Test ký tự đặc biệt không hợp lệ', () => {
         expect(validateUsername('test user!')).toBe('Tên đăng nhập chỉ được chứa chữ, số, và các ký tự _, ., -');
     });
 
-    test('TC4: should return an empty string for a valid username', () => {
+    test('TC5: Test username hợp lệ', () => {
         expect(validateUsername('valid-user_123')).toBe('');
     });
-
 });
 
-// Viết các test case cho hàm validatePassword
-describe('Password Validation', () => {
-    test('TC1: should return an error if password is too short (less than 6 chars)', () => {
+describe('Password Validation Tests', () => {
+
+    test('TC1: Test password rỗng', () => {
+        const emptyPassword = '';
+        expect(validatePassword(emptyPassword)).toBe('Mật khẩu không được để trống');
+    });
+
+    test('TC2: Test password quá ngắn', () => {
         expect(validatePassword('123ab')).toBe('Mật khẩu phải có ít nhất 6 ký tự');
     });
 
-    test('TC2: should return an error if password does not contain a number', () => {
+    test('TC3: Test password quá dài', () => {
+        const longPassword = 'a'.repeat(101);
+        expect(validatePassword(longPassword)).toBe('Mật khẩu không được vượt quá 100 ký tự');
+    });
+
+    test('TC4: Test password không chứa số', () => {
         expect(validatePassword('abcdef')).toBe('Mật khẩu phải chứa ít nhất một chữ số');
     });
 
-    test('TC3: should return an error if password does not contain a letter', () => {
+    test('TC5: Test password không chứa chữ cái', () => {
         expect(validatePassword('123456')).toBe('Mật khẩu phải chứa ít nhất một chữ cái');
     });
 
-    test('TC4: should return an empty string for a valid password', () => {
+    test('TC6: Test password hợp lệ', () => {
         expect(validatePassword('validPass123')).toBe('');
     });
 });

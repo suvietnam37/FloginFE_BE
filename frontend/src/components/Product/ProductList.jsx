@@ -1,6 +1,6 @@
 import React from 'react';
 
-function ProductList({ products }) {
+function ProductList({ products, onEdit, onDelete }) {
     return (
         <div>
             <h3>Danh sách sản phẩm</h3>
@@ -11,6 +11,7 @@ function ProductList({ products }) {
                         <th>Tên</th>
                         <th>Giá</th>
                         <th>Số lượng</th>
+                        <th>Hành động</th> {/* Thêm cột mới */}
                     </tr>
                 </thead>
                 <tbody>
@@ -20,6 +21,10 @@ function ProductList({ products }) {
                             <td>{product.name}</td>
                             <td>{product.price}</td>
                             <td>{product.quantity}</td>
+                            <td>
+                                <button onClick={() => onEdit(product)}>Sửa</button>
+                                <button onClick={() => onDelete(product.id)}>Xóa</button>
+                            </td>
                         </tr>
                     ))}
                 </tbody>
