@@ -1,73 +1,91 @@
+// src/pages/ProductPage/ProductPage.jsx
 import React, { useState, useEffect } from 'react';
-import ProductForm from '../../components/Product/ProductForm';
-import ProductList from '../../components/Product/ProductList';
 import productService from '../../services/productService';
 
 function ProductPage() {
-    const [products, setProducts] = useState([]);
-    const [productToEdit, setProductToEdit] = useState(null);
+  const [products, setProducts] = useState([]);
+  const [name, setName] = useState('');
+  const [price, setPrice] = useState('');
+  const [quantity, setQuantity] = useState('');
 
-    // useEffect sẽ chạy một lần khi component được render lần đầu
-    useEffect(() => {
-        fetchProducts();
-    }, []);
+  useEffect(() => {
+    loadProducts();
+  }, []);
 
-    const fetchProducts = async () => {
-        try {
-            const response = await productService.getAllProducts();
-            setProducts(response.data);
-        } catch (error) {
-            console.error("Failed to fetch products", error);
-        }
-    };
+  const loadProducts = async () => {
+    const res = await productService.getAllProducts();
+    setProducts(res.data);
+  };
 
-    const handleFormSubmit = async (productData, id) => {
-        try {
-            if (id) { // Nếu có ID -> Cập nhật
-                const response = await productService.updateProduct(id, productData);
-                // Cập nhật lại danh sách products
-                setProducts(products.map(p => p.id === id ? response.data : p));
-            } else { // Nếu không có ID -> Tạo mới
-                const response = await productService.createProduct(productData);
-                setProducts([...products, response.data]);
-            }
-            setProductToEdit(null); // Xóa trạng thái đang edit
-        } catch (error) {
-            console.error("Failed to submit form", error);
-        }
-    };
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const newProd = { name, price: +price, quantity: +quantity };
+    const res = await productService.createProduct(newProd);
+    setProducts(prev => [...prev, res.data]);
+    setName('');
+    setPrice('');
+    setQuantity('');
+  };
 
-    const handleEdit = (product) => {
-        setProductToEdit(product);
-    };
+  const handleDelete = async (id) => {
+    if (window.confirm('Xóa?')) {
+      await productService.deleteProduct(id);
+      setProducts(prev => prev.filter(p => p.id !== id));
+    }
+  };
 
-    const handleDelete = async (id) => {
-        if (window.confirm('Bạn có chắc chắn muốn xóa sản phẩm này?')) {
-            try {
-                await productService.deleteProduct(id);
-                // Lọc sản phẩm đã xóa ra khỏi danh sách
-                setProducts(products.filter(p => p.id !== id));
-            } catch (error) {
-                console.error("Failed to delete product", error);
-            }
-        }
-    };
+  return (
+    <div data-testid="product-page">
+      <h2 data-testid="title">Quản lý sản phẩm</h2>
 
-    return (
-        <div>
-            <h2>Trang Quản lý Sản phẩm</h2>
-            <ProductForm
-                onFormSubmit={handleFormSubmit}
-                productToEdit={productToEdit}
-                clearEdit={() => setProductToEdit(null)}
-            />
-            <hr />
-            <ProductList
-                products={products}
-                onEdit={handleEdit}
-                onDelete={handleDelete}
-            />
-        </div>
-    );
+      <form onSubmit={handleSubmit} data-testid="form">
+        <input
+          placeholder="Tên sản phẩm"
+          value={name}
+          onChange={e => setName(e.target.value)}
+          data-testid="input-name"
+        />
+        <input
+          placeholder="Giá"
+          value={price}
+          onChange={e => setPrice(e.target.value)}
+          data-testid="input-price"
+        />
+        <input
+          placeholder="Số lượng"
+          value={quantity}
+          onChange={e => setQuantity(e.target.value)}
+          data-testid="input-quantity"
+        />
+        <button type="submit" data-testid="btn-add">Thêm</button>
+      </form>
+
+      <table data-testid="table">
+        <thead>
+          <tr>
+            <th>Tên</th>
+            <th>Giá</th>
+            <th>Số lượng</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {products.map(p => (
+            <tr key={p.id} data-testid={`row-${p.id}`}>
+              <td>{p.name}</td>
+              <td>{p.price}</td>
+              <td>{p.quantity}</td>
+              <td>
+                <button onClick={() => handleDelete(p.id)} data-testid={`btn-delete-${p.id}`}>
+                  Xóa
+                </button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
 }
+
 export default ProductPage;

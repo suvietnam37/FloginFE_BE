@@ -21,10 +21,10 @@ const deleteProduct = (id) => {
 };
 
 const productService = {
-    createProduct,
-    getAllProducts,
+    createProduct: async (data) => ({ data: { ...data, id: Date.now() } }),
+    getAllProducts: async () => ({ data: [] }),
     updateProduct,
-    deleteProduct,
+    deleteProduct: async (id) => ({})
 };
 
 export default productService;

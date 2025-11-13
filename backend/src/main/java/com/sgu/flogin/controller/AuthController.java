@@ -5,6 +5,7 @@ import com.sgu.flogin.dto.LoginRequest;
 import com.sgu.flogin.dto.LoginResponse;
 import com.sgu.flogin.service.AuthService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -24,7 +25,6 @@ public class AuthController {
         if (response.isSuccess()) {
             return ResponseEntity.ok(response);
         } else {
-            return ResponseEntity.status(401).body(response); // 401 Unauthorized
-        }
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);        }
     }
 }
