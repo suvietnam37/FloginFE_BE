@@ -1,10 +1,10 @@
-// Trong file: /src/test/java/com/sgu/flogin/AuthServiceTest.java
 package com.sgu.flogin.service;
 import com.sgu.flogin.dto.LoginRequest;
 import com.sgu.flogin.dto.LoginResponse;
 import com.sgu.flogin.entity.User;
 import com.sgu.flogin.repository.UserRepository;
 import com.sgu.flogin.service.AuthService;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -17,7 +17,7 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
 
-@ExtendWith(MockitoExtension.class) // Kích hoạt Mockito
+@ExtendWith(MockitoExtension.class)
 class AuthServiceTest {
 
     @Mock
@@ -29,67 +29,69 @@ class AuthServiceTest {
     @InjectMocks
     private AuthService authService;
 
-    // --- Test case cho trường hợp đăng nhập thành công ---
     @Test
+    @DisplayName("TC1: Đăng nhập thành công")
     void whenValidCredentials_thenShouldLoginSuccessfully() {
-        // --- ARRANGE ---
+
         LoginRequest request = new LoginRequest("testuser", "Test123");
         User userInDb = new User();
         userInDb.setUsername("testuser");
-        // Mật khẩu trong DB bây giờ là một chuỗi đã được mã hóa
         userInDb.setPassword("$2a$10$abcdefghijklmnopqrstuv"); 
 
         when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(userInDb));
-        // Dạy cho mock biết: khi so sánh "Test123" với chuỗi mã hóa, kết quả là true
         when(passwordEncoder.matches("Test123", "$2a$10$abcdefghijklmnopqrstuv")).thenReturn(true);
 
-        // --- ACT ---
         LoginResponse response = authService.authenticate(request);
 
-        // --- ASSERT ---
         assertTrue(response.isSuccess());
     }
-    // --- Test case cho trường hợp sai mật khẩu ---
+
     @Test
-    void whenWrongPassword_thenShouldFailLogin() {
-        // --- ARRANGE ---
-        // 1. Dữ liệu đầu vào
-        LoginRequest request = new LoginRequest("testuser", "WrongPassword123");
+    @DisplayName("TC2: Đăng nhập với username không tồn tại")
+    void whenUsernameNotFound_thenShouldFailLogin() {
 
-        // 2. Dữ liệu giả lập trong CSDL (username đúng, password khác)
-        User userInDb = new User();
-        userInDb.setId(1L);
-        userInDb.setUsername("testuser");
-        userInDb.setPassword("CorrectPassword123"); // Password đúng trong DB
+        LoginRequest request = new LoginRequest("nonexistentuser", "SomePassword123");
 
-        // 3. Dạy cho mock biết: khi tìm "testuser", hãy trả về user này
-        when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(userInDb));
+        when(userRepository.findByUsername("nonexistentuser")).thenReturn(Optional.empty());
 
-        // --- ACT ---
         LoginResponse response = authService.authenticate(request);
 
-        // --- ASSERT ---
         assertNotNull(response);
-        assertFalse(response.isSuccess()); // Mong đợi đăng nhập thất bại
+        assertFalse(response.isSuccess());
         assertEquals("Sai tên đăng nhập hoặc mật khẩu", response.getMessage());
     }
 
-    // --- Test case cho trường hợp username không tồn tại ---
     @Test
-    void whenUsernameNotFound_thenShouldFailLogin() {
-        // --- ARRANGE ---
-        // 1. Dữ liệu đầu vào
-        LoginRequest request = new LoginRequest("nonexistentuser", "SomePassword123");
+    @DisplayName("TC3: Đăng nhập với mật khẩu sai")
+    void whenWrongPassword_thenShouldFailLogin() {
 
-        // 2. Dạy cho mock biết: khi tìm "nonexistentuser", hãy trả về Optional.empty()
-        when(userRepository.findByUsername("nonexistentuser")).thenReturn(Optional.empty());
+        LoginRequest request = new LoginRequest("testuser", "WrongPassword123");
 
-        // --- ACT ---
+        User userInDb = new User();
+        userInDb.setId(1L);
+        userInDb.setUsername("testuser");
+        userInDb.setPassword("CorrectPassword123");
+
+        when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(userInDb));
+        when(passwordEncoder.matches("WrongPassword123", "CorrectPassword123")).thenReturn(false);
+
         LoginResponse response = authService.authenticate(request);
 
-        // --- ASSERT ---
         assertNotNull(response);
-        assertFalse(response.isSuccess()); // Mong đợi đăng nhập thất bại
+        assertFalse(response.isSuccess());
+        assertEquals("Sai tên đăng nhập hoặc mật khẩu", response.getMessage());
+    }
+
+    @Test
+    @DisplayName("TC4: Validation errors")
+    void whenLoginWithEmptyUsername_thenShouldFailLogin() {
+
+        LoginRequest request = new LoginRequest("", "SomePassword123");
+    
+        when(userRepository.findByUsername("")).thenReturn(Optional.empty());
+        LoginResponse response = authService.authenticate(request);
+    
+        assertFalse(response.isSuccess());
         assertEquals("Sai tên đăng nhập hoặc mật khẩu", response.getMessage());
     }
 }
