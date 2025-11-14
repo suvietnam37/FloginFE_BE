@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import productService from '../../services/productService';
 
 function ProductForm({ onFormSubmit, productToEdit, clearEdit }) {
     const [formData, setFormData] = useState({ name: '', price: '', quantity: '' });
@@ -22,31 +21,32 @@ function ProductForm({ onFormSubmit, productToEdit, clearEdit }) {
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
-    const handleSubmit = async (e) => {
+    const handleSubmit = (e) => {
+        // Ngăn trình duyệt reload
         e.preventDefault();
-        try {
-            // Chuyển đổi string sang number trước khi gửi
-            const productData = {
-                name: formData.name,
-                price: parseFloat(formData.price),
-                quantity: parseInt(formData.quantity)
-            };
-            const response = await productService.createProduct(productData);
-            onProductCreated(response.data); // Gọi callback để báo cho component cha
-            setFormData({ name: '', price: '', quantity: '' }); // Reset form
-            onFormSubmit(productData, productToEdit ? productToEdit.id : null);
-        } catch (error) {
-            console.error("Failed to create product", error);
-            alert("Tạo sản phẩm thất bại!");
+
+        // Chuyển đổi dữ liệu
+        const productData = {
+            name: formData.name,
+            price: formData.price ? parseFloat(formData.price) : 0,
+            quantity: formData.quantity ? parseInt(formData.quantity) : 0
+        };
+
+        // Gọi hàm callback của component cha
+        onFormSubmit(productData, productToEdit ? productToEdit.id : null);
+
+        // Nếu không phải đang edit thì reset form
+        if (!isEditing) {
+            setFormData({ name: '', price: '', quantity: '' });
         }
     };
 
     return (
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} data-testid="product-form"> {/* Thêm data-testid cho form */}
             <h3>{isEditing ? 'Cập nhật sản phẩm' : 'Thêm sản phẩm mới'}</h3>
-            <input type="text" name="name" value={formData.name} onChange={handleChange} placeholder="Tên sản phẩm" required />
-            <input type="number" name="price" value={formData.price} onChange={handleChange} placeholder="Giá" required />
-            <input type="number" name="quantity" value={formData.quantity} onChange={handleChange} placeholder="Số lượng" required />
+            <input type="text" name="name" value={formData.name} onChange={handleChange} placeholder="Tên sản phẩm" />
+            <input type="number" name="price" value={formData.price} onChange={handleChange} placeholder="Giá" />
+            <input type="number" name="quantity" value={formData.quantity} onChange={handleChange} placeholder="Số lượng" />
             <button type="submit">{isEditing ? 'Lưu thay đổi' : 'Thêm'}</button>
             {isEditing && <button type="button" onClick={clearEdit}>Hủy</button>}
         </form>

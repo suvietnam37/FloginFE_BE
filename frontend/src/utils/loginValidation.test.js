@@ -1,4 +1,4 @@
-import { validatePassword, validateUsername } from './validation';
+import { validatePassword, validateUsername } from './loginValidation';
 
 describe('Username Validation Tests', () => {
 
