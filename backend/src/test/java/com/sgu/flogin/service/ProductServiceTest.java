@@ -1,108 +1,125 @@
-// Trong file: service/ProductServiceTest.java
 package com.sgu.flogin.service;
 
 import com.sgu.flogin.dto.ProductDto;
 import com.sgu.flogin.entity.Product;
 import com.sgu.flogin.repository.ProductRepository;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
+
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
-import java.util.Arrays;
-import java.util.List;
-import static org.mockito.ArgumentMatchers.anyLong;
-import java.util.Optional;
 
 @ExtendWith(MockitoExtension.class)
+@DisplayName("Product Service Unit Tests")
 class ProductServiceTest {
 
-    @Mock
+    @Mock 
     private ProductRepository productRepository;
 
     @InjectMocks
     private ProductService productService;
 
     @Test
-    void whenCreateProduct_thenShouldSaveAndReturnProduct() {
-        // ARRANGE
-        ProductDto newProductDto = new ProductDto("Laptop Dell", 15000000.0, 10);
-        Product savedProduct = new Product(1L, "Laptop Dell", 15000000.0, 10);
+    @DisplayName("TC1: Tạo sản phẩm mới thành công")
+    void testCreateProduct() {
+
+        ProductDto productDto = new ProductDto("Laptop Dell", 15000000.0, 10);
+        Product product = new Product(1L, "Laptop Dell", 15000000.0, 10);
 
         // Dạy cho mock biết khi save sẽ trả về đối tượng đã lưu
-        when(productRepository.save(any(Product.class))).thenReturn(savedProduct);
+        when(productRepository.save(any(Product.class))).thenReturn(product);
 
-        // ACT
-        ProductDto createdProduct = productService.createProduct(newProductDto);
+        // Hành động
+        ProductDto result = productService.createProduct(productDto);
 
-        // ASSERT
-        assertNotNull(createdProduct);
-        assertEquals("Laptop Dell", createdProduct.getName());
-        // Verify rằng phương thức save đã được gọi đúng 1 lần
+        // Xác nhận
+        assertNotNull(result);
+        assertEquals(1L, result.getId());
+        assertEquals("Laptop Dell", result.getName());
+        // Xác minh rằng phương thức save đã được gọi chính xác 1 lần.
         verify(productRepository, times(1)).save(any(Product.class));
     }
 
     @Test
-    void whenGetAllProducts_thenShouldReturnProductList() {
-        // ARRANGE
-        Product product1 = new Product(1L, "Laptop", 1500.0, 10);
-        Product product2 = new Product(2L, "Mouse", 25.0, 100);
-        when(productRepository.findAll()).thenReturn(Arrays.asList(product1, product2));
+    @DisplayName("TC2: Lấy thông tin sản phẩm theo ID thành công")
+    void testGetProductById() {
 
-        // ACT
-        List<ProductDto> productDtos = productService.getAllProducts();
+        Long productId = 1L;
+        Product productInDb = new Product(productId, "Laptop", 1500.0, 10);
+        when(productRepository.findById(productId)).thenReturn(Optional.of(productInDb));
 
-        // ASSERT
-        assertNotNull(productDtos);
-        assertEquals(2, productDtos.size());
-        assertEquals("Laptop", productDtos.get(0).getName());
+        ProductDto result = productService.getProductById(productId);
+
+        assertNotNull(result);
+        assertEquals(productId, result.getId());
     }
 
     @Test
-    void whenUpdateProduct_thenShouldUpdateAndReturnProduct() {
-        // ARRANGE
+    @DisplayName("TC3: Cập nhật sản phẩm thành công")
+    void testUpdateProduct() {
+
         Long productId = 1L;
-        ProductDto updateData = new ProductDto("Laptop Dell Mới", 16000000.0, 5);
-
-        Product existingProduct = new Product(productId, "Laptop Cũ", 15000000.0, 10);
-        Product updatedProduct = new Product(productId, "Laptop Dell Mới", 16000000.0, 5);
-
-        // Dạy mock: khi tìm theo ID 1, trả về sản phẩm cũ
+        ProductDto updateData = new ProductDto("Laptop Mới", 1600.0, 5);
+        Product existingProduct = new Product(productId, "Laptop Cũ", 1500.0, 10);
+        
         when(productRepository.findById(productId)).thenReturn(Optional.of(existingProduct));
-        // Dạy mock: khi lưu bất kỳ sản phẩm nào, trả về sản phẩm đã cập nhật
-        when(productRepository.save(any(Product.class))).thenReturn(updatedProduct);
+        // Dạy mock: khi save, trả về chính đối tượng đã được cập nhật.
+        when(productRepository.save(any(Product.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        // ACT
         ProductDto result = productService.updateProduct(productId, updateData);
 
-        // ASSERT
         assertNotNull(result);
-        assertEquals("Laptop Dell Mới", result.getName());
+        assertEquals("Laptop Mới", result.getName());
         assertEquals(5, result.getQuantity());
-        verify(productRepository, times(1)).findById(productId);
         verify(productRepository, times(1)).save(any(Product.class));
     }
 
     @Test
-    void whenDeleteProduct_thenShouldCallDelete() {
-        // ARRANGE
+    @DisplayName("TC4: Xóa sản phẩm thành công")
+    void testDeleteProduct() {
+
         Long productId = 1L;
-
-        // Dạy cho mock biết rằng sản phẩm với ID = 1 có tồn tại.
         when(productRepository.existsById(productId)).thenReturn(true);
-
-        // Dạy mock: khi gọi deleteById với ID 1, không làm gì cả
         doNothing().when(productRepository).deleteById(productId);
 
-        // ACT
         productService.deleteProduct(productId);
 
-        // ASSERT
-        // Xác minh rằng cả hai phương thức đều được gọi đúng 1 lần
-        verify(productRepository, times(1)).existsById(productId);
         verify(productRepository, times(1)).deleteById(productId);
+    }
+
+    @Test
+    @DisplayName("TC5: Lấy tất cả sản phẩm với pagination")
+    void testGetAllProductsWithPagination() {
+
+        Pageable pageable = PageRequest.of(0, 10);
+        
+        Product p1 = new Product(1L, "Laptop", 1500.0, 10);
+        Product p2 = new Product(2L, "Mouse", 25.0, 100);
+        List<Product> productList = Arrays.asList(p1, p2);
+
+        Page<Product> productPage = new PageImpl<>(productList, pageable, productList.size());
+
+        when(productRepository.findAll(pageable)).thenReturn(productPage);
+        
+        Page<ProductDto> resultPage = productService.getAllProducts(pageable);
+
+        assertNotNull(resultPage);
+        assertEquals(2, resultPage.getTotalElements()); // Tổng số sản phẩm
+        assertEquals(1, resultPage.getTotalPages());   // Tổng số trang
+        assertEquals("Laptop", resultPage.getContent().get(0).getName());
     }
 }

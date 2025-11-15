@@ -2,46 +2,60 @@ package com.sgu.flogin.controller;
 
 import com.sgu.flogin.dto.ProductDto;
 import com.sgu.flogin.service.ProductService;
-
 import jakarta.persistence.EntityNotFoundException;
-
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/products")
 public class ProductController {
 
-    private final ProductService productService;
+    @Autowired
+    private ProductService productService;
 
-    public ProductController(ProductService productService) {
-        this.productService = productService;
+    @PostMapping
+    public ResponseEntity<ProductDto> createProduct(@RequestBody ProductDto productDto) {
+        ProductDto createdProduct = productService.createProduct(productDto);
+        return new ResponseEntity<>(createdProduct, HttpStatus.CREATED);
     }
 
     @GetMapping
-    public List<ProductDto> getAll() {
-        return productService.getAllProducts();
+    public ResponseEntity<Page<ProductDto>> getAllProducts(Pageable pageable) {
+        Page<ProductDto> productsPage = productService.getAllProducts(pageable);
+        return ResponseEntity.ok(productsPage);
     }
 
-    @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    public ProductDto create(@RequestBody ProductDto dto) {
-        return productService.createProduct(dto);
+    @GetMapping("/{id}")
+    public ResponseEntity<ProductDto> getProductById(@PathVariable Long id) {
+        try {
+            ProductDto productDto = productService.getProductById(id);
+            return ResponseEntity.ok(productDto);
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ProductDto> update(@PathVariable Long id, @RequestBody ProductDto dto) {
-        ProductDto updated = productService.updateProduct(id, dto);
-        return updated != null ? ResponseEntity.ok(updated) : ResponseEntity.notFound().build();
+    public ResponseEntity<ProductDto> updateProduct(@PathVariable Long id, @RequestBody ProductDto productDto) {
+        try {
+            ProductDto updatedProduct = productService.updateProduct(id, productDto);
+            return ResponseEntity.ok(updatedProduct);
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 
     @DeleteMapping("/{id}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@PathVariable Long id) {
-        productService.deleteProduct(id);
+    public ResponseEntity<Void> deleteProduct(@PathVariable Long id) {
+        try {
+            productService.deleteProduct(id);
+            return ResponseEntity.noContent().build(); // Status 204
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 }
