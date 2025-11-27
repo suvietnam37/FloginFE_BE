@@ -26,7 +26,10 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/**").permitAll() // Cho phép tất cả request đến /api/auth
                 .anyRequest().authenticated() // Tất cả các request khác phải được xác thực
-            );
+            )
+            .httpBasic(httpBasic -> httpBasic.disable()) // Tắt Basic Auth (không cần thiết)
+            .formLogin(form -> form.disable()); // Tắt form login của Spring
         return http.build();
     }
+    
 }

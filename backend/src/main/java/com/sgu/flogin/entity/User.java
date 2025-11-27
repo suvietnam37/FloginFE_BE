@@ -2,8 +2,12 @@ package com.sgu.flogin.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
 @Entity
+@Getter
+@Setter
 @Table(name = "users")
 @Data // Lombok annotation để tự tạo getters, setters, etc.
 public class User {
