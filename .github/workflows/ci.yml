@@ -1,0 +1,63 @@
+# trong .github/workflows/ci.yml
+name: Flogin CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ] # Chạy khi push lên nhánh main hoặc develop
+  pull_request:
+    branches: [ main ] # Chạy khi có PR vào nhánh main
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest # Chạy trên máy ảo Ubuntu
+
+    steps:
+      # Bước 1: Lấy mã nguồn về
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # --- BACKEND TESTS ---
+      - name: Set up JDK 17 for Backend
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Build and Test Backend
+        run: mvn -B test --file backend/pom.xml # -B là batch mode, --file chỉ định vị trí pom.xml
+
+      # --- FRONTEND TESTS ---
+      - name: Set up Node.js for Frontend
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install Frontend Dependencies
+        run: npm install --prefix frontend # --prefix để chạy npm trong thư mục frontend
+
+      - name: Run Frontend Unit Tests
+        run: npm test --prefix frontend
+
+      # Chạy E2E test cần cả frontend và backend cùng chạy
+      - name: Run Frontend E2E Tests
+        # Sử dụng cypress-io/github-action để dễ dàng hơn
+        # Nó sẽ tự cài đặt, cache, chạy server và test
+        uses: cypress-io/github-action@v5
+        with:
+          working-directory: frontend # Chỉ định thư mục làm việc
+          start: npm run dev # Lệnh để khởi động frontend server
+          # Lệnh để khởi động backend server, chạy nền (&)
+          # Cần cài đặt wait-on để chờ backend sẵn sàng
+          # `npm install --prefix frontend wait-on`
+          # build: mvn -B package --file backend/pom.xml
+          # command: |
+          #  java -jar backend/target/*.jar &
+          #  npx wait-on http://localhost:8080 && npm run test:e2e
+          # LƯU Ý: Phần chạy song song này khá phức tạp.
+          # Để đơn giản cho bài tập lớn, bạn có thể chỉ chạy unit test trong CI
+          # và chạy E2E test thủ công trên máy.
+          # Hoặc chỉ tập trung vào test unit/component/integration đã mock.
+
+          # Cấu hình đơn giản hơn (chạy E2E test với mock)
+          # Nếu các bài test E2E của bạn được viết để mock API, bạn không cần chạy backend
+          # command: npm run test:e2e
