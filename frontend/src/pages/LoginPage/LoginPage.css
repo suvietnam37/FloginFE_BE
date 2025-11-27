@@ -1,0 +1,103 @@
+/* TRONG FILE: src/pages/LoginPage/LoginPage.css */
+
+/* --- Container chính bao bọc toàn bộ trang --- */
+.login-page {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh; /* Chiều cao tối thiểu bằng chiều cao màn hình */
+  background-color: #f0f2f5; /* Màu nền xám nhạt */
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
+
+/* --- Khung form đăng nhập --- */
+.login-container {
+  background-color: #ffffff;
+  padding: 40px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 400px; /* Chiều rộng tối đa của form */
+  text-align: center;
+}
+
+/* --- Tiêu đề "Đăng nhập" --- */
+.login-container h2 {
+  margin-bottom: 24px;
+  color: #1c1e21;
+  font-size: 28px;
+  font-weight: 600;
+}
+
+/* --- Mỗi nhóm input (bao gồm label và input) --- */
+.input-group {
+  margin-bottom: 20px;
+  text-align: left;
+}
+
+.input-group label {
+  display: block;
+  margin-bottom: 8px;
+  color: #606770;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* --- Ô nhập liệu --- */
+.input-group input {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid #dddfe2;
+  border-radius: 6px;
+  font-size: 16px;
+  box-sizing: border-box; /* Đảm bảo padding không làm thay đổi chiều rộng */
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+/* --- Hiệu ứng khi focus vào ô nhập liệu --- */
+.input-group input:focus {
+  border-color: #1877f2; /* Màu xanh dương của Facebook */
+  box-shadow: 0 0 0 2px rgba(24, 119, 242, 0.2);
+  outline: none;
+}
+
+/* --- Nút Đăng nhập --- */
+.login-btn {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 6px;
+  background-color: #1877f2;
+  color: #ffffff;
+  font-size: 18px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+/* --- Hiệu ứng khi di chuột qua nút --- */
+.login-btn:hover {
+  background-color: #166fe5;
+}
+
+/* --- Thông báo lỗi/thành công từ API --- */
+.api-message {
+  margin-top: 16px;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 10px;
+  border-radius: 6px;
+  text-align: center;
+}
+
+.api-message.success {
+  background-color: #e9f6ec;
+  color: #1e8737;
+  border: 1px solid #a4d8b2;
+}
+
+.api-message.error {
+  background-color: #fdecea;
+  color: #c93434;
+  border: 1px solid #f6b5b5;
+}
