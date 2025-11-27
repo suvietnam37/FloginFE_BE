@@ -3,6 +3,7 @@ package com.sgu.flogin.service;
 
 import com.sgu.flogin.dto.LoginRequest;
 import com.sgu.flogin.dto.LoginResponse;
+import com.sgu.flogin.dto.UserDto;
 import com.sgu.flogin.entity.User;
 import com.sgu.flogin.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,11 +26,15 @@ public class AuthService {
 
         if (userOptional.isPresent()) {
             User user = userOptional.get();
-            // THAY ĐỔI QUAN TRỌNG: So sánh mật khẩu đã mã hóa
             if (passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-                return new LoginResponse(true, "Đăng nhập thành công", "some-jwt-token");
+                
+                // TẠO UserDto để trả về
+                UserDto userDto = new UserDto(user.getId(), user.getUsername());
+                
+                // Gọi constructor 4 tham số khi đăng nhập thành công
+                return new LoginResponse(true, "Đăng nhập thành công", "some-jwt-token", userDto);
             }
         }
-        return new LoginResponse(false, "Sai tên đăng nhập hoặc mật khẩu", null);
+        return new LoginResponse(false, "Sai tên đăng nhập hoặc mật khẩu", null, null);
     }
 }

@@ -6,7 +6,7 @@ vi.mock('../../services/productService');
 
 describe('ProductPage Integration Tests', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   test('Hiển thị danh sách sản phẩm từ API (ProductList)', async () => {
@@ -62,7 +62,7 @@ describe('ProductPage Integration Tests', () => {
     productService.deleteProduct.mockResolvedValue({});
 
     // Mock window.confirm luôn trả về true
-    jest.spyOn(window, 'confirm').mockReturnValue(true);
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
 
     render(<ProductPage />);
 

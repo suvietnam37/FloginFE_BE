@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sgu.flogin.config.TestSecurityConfig;
 import com.sgu.flogin.dto.LoginRequest;
 import com.sgu.flogin.dto.LoginResponse;
+import com.sgu.flogin.dto.UserDto;
 import com.sgu.flogin.service.AuthService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,7 +36,8 @@ public class AuthControllerMockTest {
     void whenLoginSuccess_thenReturns200OK() throws Exception {
         // ARRANGE
         LoginRequest request = new LoginRequest("testuser", "password");
-        LoginResponse mockResponse = new LoginResponse(true, "Đăng nhập thành công", "mock-token");
+        UserDto mockUserDto = new UserDto(1L, "testuser");
+        LoginResponse mockResponse = new LoginResponse(true, "Đăng nhập thành công", "mock-token", mockUserDto);
 
         // Dạy cho mock service: Khi phương thức authenticate được gọi với bất kỳ LoginRequest nào,
         // hãy trả về mockResponse đã chuẩn bị sẵn.
@@ -55,7 +57,7 @@ public class AuthControllerMockTest {
     void whenLoginFailed_thenReturns401Unauthorized() throws Exception {
         // ARRANGE
         LoginRequest request = new LoginRequest("wronguser", "wrongpass");
-        LoginResponse mockResponse = new LoginResponse(false, "Sai thông tin", null);
+        LoginResponse mockResponse = new LoginResponse(false, "Sai thông tin", null, null);
 
         // Dạy cho mock service trường hợp thất bại
         when(authService.authenticate(any(LoginRequest.class))).thenReturn(mockResponse);

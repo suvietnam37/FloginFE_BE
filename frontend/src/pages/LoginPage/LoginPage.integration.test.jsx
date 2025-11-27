@@ -7,7 +7,7 @@ vi.mock('../../services/authService');
 
 describe('LoginPage Integration Tests', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   test('Hiển thị input và xử lý tương tác người dùng', () => {

@@ -10,7 +10,8 @@ import lombok.NoArgsConstructor;
 public class LoginResponse {
     private boolean success;
     private String message;
-    private String token; // Sẽ dùng sau này, bây giờ có thể là null
+    private String token;
+    private UserDto user;
 
     // Getters and Setters
     public boolean isSuccess() { return success; }
