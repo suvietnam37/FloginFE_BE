@@ -48,7 +48,7 @@ jobs:
       # Bước 4: Chạy các bài Unit Test & Integration Test của Frontend cho Login
       # Chúng ta có thể chỉ định chỉ chạy các file test có tên chứa "Login"
       - name: Run Frontend Login Unit/Integration Tests
-        run: npm test --prefix frontend -- LoginPage
+        run: npm test --prefix frontend -- src/pages/LoginPage/
 
       # Bước 5: Chạy E2E Test cho Login bằng Cypress
       # Quan trọng: Cần phải khởi động cả server Backend và Frontend
