@@ -101,3 +101,10 @@
   color: #c93434;
   border: 1px solid #f6b5b5;
 }
+
+.validation-error {
+  color: #c93434;
+  font-size: 13px;
+  margin-top: 6px;
+  text-align: left;
+}

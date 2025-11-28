@@ -3,6 +3,9 @@ package com.sgu.flogin.service;
 import com.sgu.flogin.dto.ProductDto;
 import com.sgu.flogin.entity.Product;
 import com.sgu.flogin.repository.ProductRepository;
+
+import jakarta.persistence.EntityNotFoundException;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -121,5 +124,19 @@ class ProductServiceTest {
         assertEquals(2, resultPage.getTotalElements()); // Tổng số sản phẩm
         assertEquals(1, resultPage.getTotalPages());   // Tổng số trang
         assertEquals("Laptop", resultPage.getContent().get(0).getName());
+    }
+
+    @Test
+    @DisplayName("TC6: Lấy sản phẩm theo ID không tìm thấy, ném EntityNotFoundException")
+    void testGetProductById_NotFound() {
+
+        Long productId = 999L;
+        when(productRepository.findById(productId)).thenReturn(Optional.empty());
+        
+        assertThrows(EntityNotFoundException.class, () -> {
+            productService.getProductById(productId);
+        });
+
+        verify(productRepository, times(1)).findById(productId);
     }
 }

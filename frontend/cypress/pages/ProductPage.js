@@ -1,34 +1,38 @@
-// trong frontend/cypress/pages/ProductPage.js
-class ProductPage {
-  visit() {
-    cy.visit('/products');
+// frontend/cypress/pages/LoginPage.js
+
+class LoginPage {
+  // Các phương thức để lấy element
+  getUsernameInput() {
+    return cy.get('[data-testid="username-input"]');
   }
 
-  getNameInput() {
-    return cy.get('[data-testid="product-name-input"]');
+  getPasswordInput() {
+    return cy.get('[data-testid="password-input"]');
   }
 
-  getPriceInput() {
-    return cy.get('[data-testid="product-price-input"]');
+  getLoginButton() {
+    return cy.get('[data-testid="login-button"]');
   }
 
-  getQuantityInput() {
-    return cy.get('[data-testid="product-quantity-input"]');
+  getApiErrorMessage() {
+    return cy.get('[data-testid="login-message"]');
   }
 
-  getSubmitButton() {
-    return cy.get('[data-testid="product-submit-button"]');
+  getValidationErrorMessage() {
+    // Giả sử bạn có data-testid cho lỗi validation, ví dụ:
+    return cy.get('[data-testid="username-error"]');
   }
 
-  createProduct(name, price, quantity) {
-    this.getNameInput().type(name);
-    this.getPriceInput().type(price);
-    this.getQuantityInput().type(quantity);
-    this.getSubmitButton().click();
-  }
-
-  findProductInList(name) {
-    return cy.contains('[data-testid="product-row"]', name);
+  // Phương thức tổng hợp các hành động
+  login(username, password) {
+    if (username) {
+      this.getUsernameInput().type(username);
+    }
+    if (password) {
+      this.getPasswordInput().type(password);
+    }
+    this.getLoginButton().click();
   }
 }
-export default new ProductPage();
+
+export default new LoginPage();

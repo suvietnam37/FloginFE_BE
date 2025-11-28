@@ -1,35 +1,44 @@
-// trong frontend/cypress/e2e/login.cy.js
+import LoginPage from '../pages/LoginPage';
 
 describe('Login E2E Tests', () => {
   beforeEach(() => {
-    // Truy cập vào trang login trước mỗi bài test
     cy.visit('/login');
   });
 
-  it('should display an error for invalid credentials', () => {
-    // ACT: Nhập sai thông tin
-    cy.get('[data-testid="username-input"]').type('wronguser');
-    cy.get('[data-testid="password-input"]').type('wrongpass');
-    cy.get('[data-testid="login-button"]').click();
+  // --- Test Success/Error Flows ---
 
-    // ASSERT: Kiểm tra thông báo lỗi
-    cy.get('[data-testid="login-message"]')
+  it('should login successfully and redirect to /products for valid credentials', () => {
+    // ACT: Sử dụng phương thức từ Page Object
+    LoginPage.login('testuser', 'Test123');
+
+    // ASSERT
+    cy.url().should('include', '/products');
+    cy.contains('h2', 'Trang Quản lý Sản phẩm').should('be.visible');
+  });
+
+  it('should display an API error message for invalid credentials', () => {
+    // ACT
+    LoginPage.login('wronguser', 'wrongpass');
+
+    // ASSERT
+    LoginPage.getApiErrorMessage()
       .should('be.visible')
       .and('contain', 'Sai tên đăng nhập hoặc mật khẩu');
   });
 
-  it('should login successfully and redirect to /products for valid credentials', () => {
-    // ARRANGE:
-    // Đảm bảo có user 'testuser'/'Test123' trong CSDL backend (từ file data.sql)
+  // --- Test Validation Messages ---
 
-    // ACT: Nhập đúng thông tin
-    cy.get('[data-testid="username-input"]').type('testuser');
-    cy.get('[data-testid="password-input"]').type('Test123');
-    cy.get('[data-testid="login-button"]').click();
+  it('should display a validation error message for a short username', () => {
+    // ACT: Chỉ nhập username không hợp lệ và submit
+    LoginPage.login('ab', 'anypassword');
 
-    // ASSERT: Kiểm tra đã chuyển trang
-    cy.url().should('include', '/products');
-    // Kiểm tra xem trang products có nội dung mong muốn không
-    cy.contains('h2', 'Trang Quản lý Sản phẩm').should('be.visible');
+    // ASSERT: Kiểm tra thông báo lỗi validation từ frontend
+    // (Giả sử logic validation trong component của bạn sẽ hiển thị lỗi này)
+    LoginPage.getValidationErrorMessage()
+      .should('be.visible')
+      .and('contain', 'Tên đăng nhập phải có ít nhất 3 ký tự');
+    
+    // Kiểm tra xem trang không chuyển hướng
+    cy.url().should('not.include', '/products');
   });
 });

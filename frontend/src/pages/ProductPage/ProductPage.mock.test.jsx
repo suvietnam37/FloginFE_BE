@@ -9,6 +9,7 @@ vi.mock('../../services/productService', () => ({
   default: {
     getAllProducts: vi.fn(),
     createProduct: vi.fn(),
+    updateProduct: vi.fn(),
     deleteProduct: vi.fn(),
   },
 }));
@@ -52,6 +53,35 @@ describe('ProductPage - CLEAN MOCK TESTS', () => {
     expect(screen.getByTestId('row-3')).toBeInTheDocument();
     expect(screen.getByText('Keyboard')).toBeInTheDocument();
     expect(productService.createProduct).toHaveBeenCalledTimes(1);
+  });
+
+   test('cập nhật sản phẩm thành công', async () => {
+    const updatedProductData = { id: 1, name: 'Laptop Pro', price: 1200, quantity: 5 };
+    productService.updateProduct.mockResolvedValue({ data: updatedProductData });
+
+    render(<ProductPage />);
+    await flushPromises();
+
+    expect(screen.getByText('Laptop')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByTestId('btn-edit-1'));
+
+    const nameInput = screen.getByTestId('input-name');
+    fireEvent.change(nameInput, { target: { value: 'Laptop Pro' } });
+
+    fireEvent.click(screen.getByRole('button', { name: /Lưu/i }));
+
+    await flushPromises();
+
+    expect(productService.updateProduct).toHaveBeenCalledWith(1, {
+      name: 'Laptop Pro',
+      price: 1000,
+      quantity: 5,
+    });
+    expect(productService.updateProduct).toHaveBeenCalledTimes(1);
+    
+    expect(screen.queryByText('Laptop')).not.toBeInTheDocument();
+    expect(screen.getByText('Laptop Pro')).toBeInTheDocument();
   });
 
   test('xóa sản phẩm khỏi danh sách', async () => {
