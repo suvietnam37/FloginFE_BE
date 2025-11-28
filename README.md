@@ -125,3 +125,30 @@ k6 run login-test.js
 
 # Chạy test hiệu năng cho API Product
 k6 run product-test.js
+1.  **Chạy trên máy:**
+    *   Mở Terminal 1, chạy backend: `cd backend` -> `mvn spring-boot:run`.
+    *   Mở Terminal 2, chạy frontend: `cd frontend` -> `npm run dev`.
+    *   Mở Terminal 3, chạy E2E test: `cd frontend` -> `npx cypress open` (để xem trực quan) hoặc `npm run test:e2e` (để chạy trong terminal).
+2.  **Chạy trên CI/CD:**
+    *   Commit và push tất cả các file đã thay đổi lên GitHub.
+    *   Vào repository của bạn, chọn tab "Actions" để xem workflow tự động chạy.
+
+
+## Performance Testing
+    Bạn có thể viết vào báo cáo của mình như sau:
+Phân tích kết quả:
+"Kết quả kiểm thử hiệu năng cho thấy API Login hoạt động tốt với số lượng người dùng ít, nhưng hiệu năng suy giảm nghiêm trọng khi số lượng người dùng đồng thời (concurrent users) tăng cao."
+"Với mức tải 500-1000 VUs, thời gian phản hồi p(95) lên tới 50 giây và tỷ lệ lỗi là 3.67%, vượt xa ngưỡng cho phép. Nguyên nhân chính được xác định là do chi phí tính toán cao của thuật toán băm mật khẩu BCrypt, gây quá tải CPU khi có nhiều request đăng nhập đồng thời."
+Đưa ra Recommendations:
+Tối ưu hóa BCrypt Cost Factor: "Trong SecurityConfig.java, BCryptPasswordEncoder có thể được cấu hình với một "strength" hoặc "cost factor" (mặc định là 10). Giảm giá trị này (ví dụ: xuống 8 hoặc 9) sẽ làm cho việc băm mật khẩu nhanh hơn, cải thiện hiệu năng đăng nhập, nhưng sẽ phải đánh đổi một chút về bảo mật. Cần cân nhắc sự đánh đổi này."
+code
+Java
+// Ví dụ trong SecurityConfig.java
+@Bean
+public PasswordEncoder passwordEncoder() {
+    return new BCryptPasswordEncoder(8); // Giảm cost factor
+}
+```    *   **Triển khai Rate Limiting:** "Để bảo vệ hệ thống khỏi các cuộc tấn công brute-force và giảm tải đột biến, cần triển khai cơ chế Rate Limiting. Ví dụ: giới hạn mỗi địa chỉ IP chỉ được phép thực hiện 5 lần đăng nhập thất bại trong 1 phút."
+Nâng cấp tài nguyên Server (Scaling Up): "Đối với môi trường production, cần đảm bảo server có đủ tài nguyên CPU để xử lý tải dự kiến."
+Tăng số lượng Instance (Scaling Out): "Triển khai ứng dụng trên nhiều instance và sử dụng một Load Balancer để phân phối tải đều, giúp hệ thống có khả năng xử lý nhiều request đồng thời hơn."
+Tóm lại: Kết quả k6 của bạn không phải là một thất bại, mà nó đã thành công trong việc tìm ra điểm yếu về hiệu năng của ứng dụng. Đây chính xác là mục đích của Performance Testing. Hãy trình bày phân tích và các đề xuất trên vào báo cáo của bạn.

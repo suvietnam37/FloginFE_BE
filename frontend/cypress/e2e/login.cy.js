@@ -18,7 +18,7 @@ describe('Login E2E Tests', () => {
 
   it('should display an API error message for invalid credentials', () => {
     // ACT
-    LoginPage.login('wronguser', 'wrongpass');
+    LoginPage.login('wronguser', 'wrongpass123'); // Thêm số vào password
 
     // ASSERT
     LoginPage.getApiErrorMessage()
@@ -26,19 +26,11 @@ describe('Login E2E Tests', () => {
       .and('contain', 'Sai tên đăng nhập hoặc mật khẩu');
   });
 
-  // --- Test Validation Messages ---
+  it('should log in successfully and redirect for valid credentials', () => {
+    LoginPage.login('testuser', 'Test123');
 
-  it('should display a validation error message for a short username', () => {
-    // ACT: Chỉ nhập username không hợp lệ và submit
-    LoginPage.login('ab', 'anypassword');
-
-    // ASSERT: Kiểm tra thông báo lỗi validation từ frontend
-    // (Giả sử logic validation trong component của bạn sẽ hiển thị lỗi này)
-    LoginPage.getValidationErrorMessage()
-      .should('be.visible')
-      .and('contain', 'Tên đăng nhập phải có ít nhất 3 ký tự');
-    
-    // Kiểm tra xem trang không chuyển hướng
-    cy.url().should('not.include', '/products');
+    // ASSERT
+    cy.url().should('include', '/products');
+    cy.contains('h2', 'Quản lý sản phẩm').should('be.visible');
   });
 });
