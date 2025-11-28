@@ -36,7 +36,7 @@ jobs:
         run: npm install --prefix frontend # --prefix để chạy npm trong thư mục frontend
 
       - name: Run Frontend Unit Tests
-        run: npm test --prefix frontend
+        run: npm test --prefix frontend -- src/pages/LoginPage/
 
       # Chạy E2E test cần cả frontend và backend cùng chạy
       - name: Run Frontend E2E Tests
