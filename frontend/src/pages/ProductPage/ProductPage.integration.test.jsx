@@ -20,8 +20,8 @@ describe('ProductPage Integration Tests', () => {
     render(<ProductPage />);
 
     await waitFor(() => {
-      expect(screen.getByTestId('row-1')).toBeInTheDocument();
-      expect(screen.getByTestId('row-2')).toBeInTheDocument();
+      expect(screen.getByTestId('product-item-1')).toBeInTheDocument();
+      expect(screen.getByTestId('product-item-2')).toBeInTheDocument();
     });
   });
 
@@ -33,17 +33,17 @@ describe('ProductPage Integration Tests', () => {
 
     render(<ProductPage />);
 
-    fireEvent.change(screen.getByTestId('input-name'), {
+    fireEvent.change(screen.getByTestId('product-name-input'), {
       target: { value: 'AirPods' }
     });
-    fireEvent.change(screen.getByTestId('input-price'), {
+    fireEvent.change(screen.getByTestId('product-price-input'), {
       target: { value: '5000000' }
     });
-    fireEvent.change(screen.getByTestId('input-quantity'), {
+    fireEvent.change(screen.getByTestId('product-quantity-input'), {
       target: { value: '15' }
     });
 
-    fireEvent.click(screen.getByTestId('btn-add'));
+    fireEvent.click(screen.getByTestId('product-submit-button'));
 
     await waitFor(() => {
       expect(productService.createProduct).toHaveBeenCalledWith({
@@ -51,7 +51,7 @@ describe('ProductPage Integration Tests', () => {
         price: 5000000,
         quantity: 15
       });
-      expect(screen.getByTestId('row-3')).toBeInTheDocument();
+      expect(screen.getByTestId('product-item-3')).toBeInTheDocument();
     });
   });
 
@@ -67,14 +67,14 @@ describe('ProductPage Integration Tests', () => {
     render(<ProductPage />);
 
     await waitFor(() => {
-      expect(screen.getByTestId('row-4')).toBeInTheDocument();
+      expect(screen.getByTestId('product-item-4')).toBeInTheDocument();
     });
 
     fireEvent.click(screen.getByTestId('btn-delete-4'));
 
     await waitFor(() => {
       expect(productService.deleteProduct).toHaveBeenCalledWith(4);
-      expect(screen.queryByTestId('row-4')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('product-item-4')).not.toBeInTheDocument();
     });
   });
 });

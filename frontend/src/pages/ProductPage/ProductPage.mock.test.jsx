@@ -32,8 +32,8 @@ describe('ProductPage - CLEAN MOCK TESTS', () => {
     render(<ProductPage />);
     await flushPromises();
 
-    expect(screen.getByTestId('row-1')).toBeInTheDocument();
-    expect(screen.getByTestId('row-2')).toBeInTheDocument();
+    expect(screen.getByTestId('product-item-1')).toBeInTheDocument();
+    expect(screen.getByTestId('product-item-2')).toBeInTheDocument();
   });
 
   test('thêm sản phẩm mới vào danh sách', async () => {
@@ -43,14 +43,14 @@ describe('ProductPage - CLEAN MOCK TESTS', () => {
     render(<ProductPage />);
     await flushPromises();
 
-    fireEvent.change(screen.getByTestId('input-name'), { target: { value: 'Keyboard' } });
-    fireEvent.change(screen.getByTestId('input-price'), { target: { value: '50' } });
-    fireEvent.change(screen.getByTestId('input-quantity'), { target: { value: '30' } });
-    fireEvent.click(screen.getByTestId('btn-add'));
+    fireEvent.change(screen.getByTestId('product-name-input'), { target: { value: 'Keyboard' } });
+    fireEvent.change(screen.getByTestId('product-price-input'), { target: { value: '50' } });
+    fireEvent.change(screen.getByTestId('product-quantity-input'), { target: { value: '30' } });
+    fireEvent.click(screen.getByTestId('product-submit-button'));
 
     await flushPromises();
 
-    expect(screen.getByTestId('row-3')).toBeInTheDocument();
+    expect(screen.getByTestId('product-item-3')).toBeInTheDocument();
     expect(screen.getByText('Keyboard')).toBeInTheDocument();
     expect(productService.createProduct).toHaveBeenCalledTimes(1);
   });
@@ -66,7 +66,7 @@ describe('ProductPage - CLEAN MOCK TESTS', () => {
 
     fireEvent.click(screen.getByTestId('btn-edit-1'));
 
-    const nameInput = screen.getByTestId('input-name');
+    const nameInput = screen.getByTestId('product-name-input');
     fireEvent.change(nameInput, { target: { value: 'Laptop Pro' } });
 
     fireEvent.click(screen.getByRole('button', { name: /Lưu/i }));
@@ -94,7 +94,7 @@ describe('ProductPage - CLEAN MOCK TESTS', () => {
     fireEvent.click(screen.getByTestId('btn-delete-1'));
     await flushPromises();
 
-    expect(screen.queryByTestId('row-1')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('product-item-1')).not.toBeInTheDocument();
     expect(productService.deleteProduct).toHaveBeenCalledWith(1);
   });
 });

@@ -1,5 +1,4 @@
-# trong .github/workflows/ci.yml
-name: Flogin CI/CD Pipeline
+name: Complete CI/CD Pipeline
 
 on:
   push:
@@ -10,74 +9,75 @@ on:
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
+    
+    # Khởi tạo một service container cho database PostgreSQL
+    services:
+      postgres:
+        image: postgres:14
+        env:
+          POSTGRES_DB: flogin_db_ci
+          POSTGRES_USER: runner
+          POSTGRES_PASSWORD: password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
     steps:
-      # Bước 1: Lấy mã nguồn
       - name: Checkout code
-        uses: actions/checkout@v4 # Sử dụng phiên bản mới nhất
+        uses: actions/checkout@v4
 
-      # Bước 2: Cài đặt Java và Node.js
-      - name: Set up JDK 17
+      - name: Set up JDK 17 and Node.js 18
         uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
-      - name: Set up Node.js 18
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: '18'
-          cache: 'npm' # Bật cache cho npm để tăng tốc độ cài đặt
+          cache: 'npm'
           cache-dependency-path: frontend/package-lock.json
-
-      # Bước 3: Build và chạy Unit/Integration Test cho Backend
-      - name: Build and Test Backend
+      
+      # Chạy tất cả các test của Backend
+      - name: Run Backend Tests
         run: mvn -B test --file backend/pom.xml
+        env:
+          SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/flogin_db_ci
+          SPRING_DATASOURCE_USERNAME: runner
+          SPRING_DATASOURCE_PASSWORD: password
 
-      # Bước 4: Cài đặt dependencies cho Frontend
-      - name: Install Frontend Dependencies
-        run: npm install --prefix frontend
+      # Cài đặt và chạy tất cả các test của Frontend (Unit/Component)
+      - name: Run Frontend Unit/Component Tests
+        run: |
+          npm install --prefix frontend
+          npm test --prefix frontend
 
-      # Bước 5: Chạy Unit/Component Test cho Frontend
-      - name: Run Frontend Unit Tests
-        run: npm test --prefix frontend
-
-      # --- PHẦN E2E TEST ĐÃ ĐƯỢC SỬA LẠI HOÀN CHỈNH ---
-      - name: Run End-to-End Tests
-        # Sử dụng action Cypress chính thức
+      # Chạy E2E Tests
+      - name: Run End-to-End Tests with Cypress
         uses: cypress-io/github-action@v6
         with:
-          # Thư mục làm việc của Cypress
           working-directory: frontend
-          
-          # Lệnh Build: Chạy trước khi test
-          # 1. Build backend thành file .jar
-          # 2. Cài đặt wait-on để chờ server
           build: |
             mvn -B package --file ../backend/pom.xml
             npm install --prefix frontend wait-on
-
-          # Lệnh Start: Các lệnh để khởi động server
-          # 1. Chạy backend server ở chế độ nền (&)
-          # 2. Chạy frontend server ở chế độ nền (&)
-          # 3. Dùng wait-on để đợi cả 2 server sẵn sàng trước khi chạy test
           start: |
             java -jar ../backend/target/*.jar &
             npm run dev &
             npx wait-on http://localhost:8080 http://localhost:5173
-          
-          # Lệnh Test: Lệnh để chạy Cypress
           command: npm run test:e2e
-
-          # Tùy chọn để Cypress không mở trình duyệt (chạy headless)
           headless: true
-        
-        # Biến môi trường để đảm bảo Cypress kết nối đúng địa chỉ
         env:
           CYPRESS_BASE_URL: http://localhost:5173
-
-      # --- LƯU LẠI KẾT QUẢ TEST ---
-      - name: Upload Test Artifacts
-        if: failure() # Chỉ chạy bước này khi có test thất bại
+          SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/flogin_db_ci
+          SPRING_DATASOURCE_USERNAME: runner
+          SPRING_DATASOURCE_PASSWORD: password
+          
+      # Upload các video và screenshot khi E2E test thất bại
+      - name: Upload Cypress Artifacts
+        if: failure()
         uses: actions/upload-artifact@v4
         with:
           name: cypress-artifacts

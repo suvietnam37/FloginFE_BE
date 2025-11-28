@@ -1,38 +1,41 @@
-// frontend/cypress/pages/LoginPage.js
-
-class LoginPage {
-  // Các phương thức để lấy element
-  getUsernameInput() {
-    return cy.get('[data-testid="username-input"]');
+class ProductPage {
+  // --- Navigation ---
+  visit() {
+    cy.visit('/products');
   }
 
-  getPasswordInput() {
-    return cy.get('[data-testid="password-input"]');
+  // --- Form Elements & Actions ---
+  getNameInput() { return cy.get('[data-testid="product-name-input"]'); }
+  getPriceInput() { return cy.get('[data-testid="product-price-input"]'); }
+  getQuantityInput() { return cy.get('[data-testid="product-quantity-input"]'); }
+  getSubmitButton() { return cy.get('[data-testid="product-submit-button"]'); }
+
+  fillProductForm({ name, price, quantity }) {
+    if (name) this.getNameInput().clear().type(name);
+    if (price) this.getPriceInput().clear().type(price);
+    if (quantity) this.getQuantityInput().clear().type(quantity);
+  }
+  
+  submitForm() {
+    this.getSubmitButton().click();
   }
 
-  getLoginButton() {
-    return cy.get('[data-testid="login-button"]');
+  // --- List Elements & Actions ---
+  getProductRow(productId) {
+    return cy.get(`[data-testid="product-item-${productId}"]`);
+  }
+  
+  findProductByName(name) {
+      return cy.contains('[data-testid^="product-item-"]', name);
   }
 
-  getApiErrorMessage() {
-    return cy.get('[data-testid="login-message"]');
+  clickEditButtonOnRow(productId) {
+    this.getProductRow(productId).find(`[data-testid="btn-edit-${productId}"]`).click();
   }
 
-  getValidationErrorMessage() {
-    // Giả sử bạn có data-testid cho lỗi validation, ví dụ:
-    return cy.get('[data-testid="username-error"]');
-  }
-
-  // Phương thức tổng hợp các hành động
-  login(username, password) {
-    if (username) {
-      this.getUsernameInput().type(username);
-    }
-    if (password) {
-      this.getPasswordInput().type(password);
-    }
-    this.getLoginButton().click();
+  clickDeleteButtonOnRow(productId) {
+    this.getProductRow(productId).find(`[data-testid="btn-delete-${productId}"]`).click();
   }
 }
 
-export default new LoginPage();
+export default new ProductPage();

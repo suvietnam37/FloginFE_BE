@@ -14,49 +14,58 @@ function ProductPage() {
   const loadProducts = async () => {
     try {
       const res = await productService.getAllProducts();
-      // Giả sử API trả về một đối tượng Page, chúng ta lấy content
       setProducts(res.data.content || res.data);
     } catch (error) {
       console.error("Failed to load products:", error);
+      alert("Không thể tải danh sách sản phẩm!");
     }
   };
 
+  // Xử lý thay đổi trên các ô input của form
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
+  // Reset form về trạng thái ban đầu (để tạo mới)
   const resetForm = () => {
     setFormData({ id: null, name: '', price: '', quantity: '' });
   };
 
+  // Xử lý khi submit form (cả tạo mới và cập nhật)
   const handleSubmit = async (e) => {
     e.preventDefault();
     const productData = { name: formData.name, price: +formData.price, quantity: +formData.quantity };
     
     try {
-      if (isEditing) { // Nếu đang edit -> gọi API update
+      if (isEditing) { // Nếu đang ở chế độ sửa -> gọi API update
         const res = await productService.updateProduct(formData.id, productData);
+        // Cập nhật lại sản phẩm trong danh sách state
         setProducts(prev => prev.map(p => p.id === formData.id ? res.data : p));
       } else { // Nếu không -> gọi API create
         const res = await productService.createProduct(productData);
+        // Thêm sản phẩm mới vào danh sách state
         setProducts(prev => [...prev, res.data]);
       }
-      resetForm();
+      resetForm(); // Sau khi thành công, reset form
     } catch (error) {
       console.error("Failed to save product:", error);
       alert("Lưu sản phẩm thất bại!");
     }
   };
 
+  // Xử lý khi người dùng nhấn nút "Sửa"
   const handleEdit = (product) => {
+    // Đổ dữ liệu của sản phẩm vào form để bắt đầu chỉnh sửa
     setFormData({ id: product.id, name: product.name, price: product.price, quantity: product.quantity });
   };
 
+  // Xử lý khi người dùng nhấn nút "Xóa"
   const handleDelete = async (id) => {
     if (window.confirm('Bạn có chắc chắn muốn xóa sản phẩm này?')) {
       try {
         await productService.deleteProduct(id);
+        // Lọc sản phẩm đã bị xóa ra khỏi danh sách state
         setProducts(prev => prev.filter(p => p.id !== id));
       } catch (error) {
         console.error("Failed to delete product:", error);
@@ -69,13 +78,14 @@ function ProductPage() {
     <div className="product-page" data-testid="product-page">
       <h2 data-testid="title">Quản lý sản phẩm</h2>
 
-      <form onSubmit={handleSubmit} className="product-form" data-testid="form">
+      {/* Form để tạo mới hoặc cập nhật sản phẩm */}
+      <form onSubmit={handleSubmit} className="product-form" data-testid="product-form">
         <input
           placeholder="Tên sản phẩm"
           name="name"
           value={formData.name}
           onChange={handleInputChange}
-          data-testid="input-name"
+          data-testid="product-name-input"
           required
         />
         <input
@@ -84,7 +94,7 @@ function ProductPage() {
           type="number"
           value={formData.price}
           onChange={handleInputChange}
-          data-testid="input-price"
+          data-testid="product-price-input"
           required
         />
         <input
@@ -93,16 +103,21 @@ function ProductPage() {
           type="number"
           value={formData.quantity}
           onChange={handleInputChange}
-          data-testid="input-quantity"
+          data-testid="product-quantity-input"
           required
         />
-        <button type="submit" data-testid="btn-add">
+        <button type="submit" data-testid="product-submit-button">
           {isEditing ? 'Lưu' : 'Thêm'}
         </button>
-        {isEditing && <button type="button" onClick={resetForm}>Hủy</button>}
+        {isEditing && (
+            <button type="button" onClick={resetForm} data-testid="cancel-edit-button">
+                Hủy
+            </button>
+        )}
       </form>
 
-      <table className="product-table" data-testid="table">
+      {/* Bảng hiển thị danh sách sản phẩm */}
+      <table className="product-table" data-testid="product-table">
         <thead>
           <tr>
             <th>Tên sản phẩm</th>
@@ -113,15 +128,23 @@ function ProductPage() {
         </thead>
         <tbody>
           {products.map(p => (
-            <tr key={p.id} data-testid={`row-${p.id}`}>
+            <tr key={p.id} data-testid={`product-item-${p.id}`}>
               <td>{p.name}</td>
               <td>{p.price}</td>
               <td>{p.quantity}</td>
               <td className="actions">
-                <button onClick={() => handleEdit(p)} className="btn-edit" data-testid={`btn-edit-${p.id}`}>
+                <button 
+                    onClick={() => handleEdit(p)} 
+                    className="btn-edit" 
+                    data-testid={`btn-edit-${p.id}`}
+                >
                   Sửa
                 </button>
-                <button onClick={() => handleDelete(p.id)} className="btn-delete" data-testid={`btn-delete-${p.id}`}>
+                <button 
+                    onClick={() => handleDelete(p.id)} 
+                    className="btn-delete" 
+                    data-testid={`btn-delete-${p.id}`}
+                >
                   Xóa
                 </button>
               </td>
