@@ -1,6 +1,6 @@
 // src/pages/LoginPage/LoginPage.mock.test.jsx
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import LoginPage from './LoginPage';
 import authService from '../../services/authService';
@@ -32,14 +32,14 @@ describe('LoginPage - Mock Tests', () => {
       target: { value: 'admin' },
     });
     fireEvent.change(screen.getByTestId('password-input'), {
-      target: { value: '123456' },
+      target: { value: 'password123' },
     });
     fireEvent.click(screen.getByTestId('login-button'));
 
-    const msg = await screen.findByTestId('login-message');
+    const msg = await screen.findByTestId('login-message'); 
     expect(msg).toBeInTheDocument();
     expect(msg).toHaveTextContent('Đăng nhập thành công!');
-    expect(authService.login).toHaveBeenCalledWith('admin', '123456');
+    expect(authService.login).toHaveBeenCalledWith('admin', 'password123');
   });
 
   test('displays error message on failed login', async () => {
@@ -54,10 +54,10 @@ describe('LoginPage - Mock Tests', () => {
     );
 
     fireEvent.change(screen.getByTestId('username-input'), {
-      target: { value: 'wrong' },
+      target: { value: 'wronguser' },
     });
     fireEvent.change(screen.getByTestId('password-input'), {
-      target: { value: 'wrong' },
+      target: { value: 'wrongpass123' },
     });
     fireEvent.click(screen.getByTestId('login-button'));
 
