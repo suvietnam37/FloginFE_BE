@@ -21,11 +21,11 @@ describe('LoginPage Integration Tests', () => {
     expect(passwordInput).toBeInTheDocument();
     expect(submitButton).toBeInTheDocument();
 
-    fireEvent.change(usernameInput, { target: { value: 'user1' } });
-    fireEvent.change(passwordInput, { target: { value: 'pass1' } });
+    fireEvent.change(usernameInput, { target: { value: 'user123' } });
+    fireEvent.change(passwordInput, { target: { value: 'pass123' } });
 
-    expect(usernameInput.value).toBe('user1');
-    expect(passwordInput.value).toBe('pass1');
+    expect(usernameInput.value).toBe('user123');
+    expect(passwordInput.value).toBe('pass123');
   });
 
   test('Gọi API khi submit form hợp lệ', async () => {
@@ -36,16 +36,16 @@ describe('LoginPage Integration Tests', () => {
     render(<LoginPage />, { wrapper: MemoryRouter });
 
     fireEvent.change(screen.getByTestId('username-input'), {
-      target: { value: 'validuser' }
+      target: { value: 'validuser' },
     });
     fireEvent.change(screen.getByTestId('password-input'), {
-      target: { value: 'validpass' }
+      target: { value: 'validpass123' },
     });
 
     fireEvent.click(screen.getByTestId('login-button'));
 
     await waitFor(() => {
-      expect(authService.login).toHaveBeenCalledWith('validuser', 'validpass');
+      expect(authService.login).toHaveBeenCalledWith('validuser', 'validpass123');
       expect(screen.getByTestId('login-message')).toHaveTextContent('Đăng nhập thành công');
     });
   });
@@ -61,7 +61,7 @@ describe('LoginPage Integration Tests', () => {
       target: { value: 'wronguser' }
     });
     fireEvent.change(screen.getByTestId('password-input'), {
-      target: { value: 'wrongpass' }
+      target: { value: 'wrongpass123' }
     });
 
     fireEvent.click(screen.getByTestId('login-button'));
@@ -81,7 +81,7 @@ describe('LoginPage Integration Tests', () => {
       target: { value: 'anyuser' }
     });
     fireEvent.change(screen.getByTestId('password-input'), {
-      target: { value: 'anypass' }
+      target: { value: 'anypass123' }
     });
 
     fireEvent.click(screen.getByTestId('login-button'));
