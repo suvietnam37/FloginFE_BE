@@ -3,61 +3,84 @@ name: Flogin CI/CD Pipeline
 
 on:
   push:
-    branches: [ main, develop ] # Chạy khi push lên nhánh main hoặc develop
+    branches: [ main, develop ]
   pull_request:
-    branches: [ main ] # Chạy khi có PR vào nhánh main
+    branches: [ main ]
 
 jobs:
   build-and-test:
-    runs-on: ubuntu-latest # Chạy trên máy ảo Ubuntu
+    runs-on: ubuntu-latest
 
     steps:
-      # Bước 1: Lấy mã nguồn về
+      # Bước 1: Lấy mã nguồn
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4 # Sử dụng phiên bản mới nhất
 
-      # --- BACKEND TESTS ---
-      - name: Set up JDK 17 for Backend
-        uses: actions/setup-java@v3
+      # Bước 2: Cài đặt Java và Node.js
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
-
-      - name: Build and Test Backend
-        run: mvn -B test --file backend/pom.xml # -B là batch mode, --file chỉ định vị trí pom.xml
-
-      # --- FRONTEND TESTS ---
-      - name: Set up Node.js for Frontend
-        uses: actions/setup-node@v3
+      - name: Set up Node.js 18
+        uses: actions/setup-node@v4
         with:
           node-version: '18'
+          cache: 'npm' # Bật cache cho npm để tăng tốc độ cài đặt
+          cache-dependency-path: frontend/package-lock.json
 
+      # Bước 3: Build và chạy Unit/Integration Test cho Backend
+      - name: Build and Test Backend
+        run: mvn -B test --file backend/pom.xml
+
+      # Bước 4: Cài đặt dependencies cho Frontend
       - name: Install Frontend Dependencies
-        run: npm install --prefix frontend # --prefix để chạy npm trong thư mục frontend
+        run: npm install --prefix frontend
 
+      # Bước 5: Chạy Unit/Component Test cho Frontend
       - name: Run Frontend Unit Tests
-        run: npm test --prefix frontend -- src/pages/LoginPage/
+        run: npm test --prefix frontend
 
-      # Chạy E2E test cần cả frontend và backend cùng chạy
-      - name: Run Frontend E2E Tests
-        # Sử dụng cypress-io/github-action để dễ dàng hơn
-        # Nó sẽ tự cài đặt, cache, chạy server và test
-        uses: cypress-io/github-action@v5
+      # --- PHẦN E2E TEST ĐÃ ĐƯỢC SỬA LẠI HOÀN CHỈNH ---
+      - name: Run End-to-End Tests
+        # Sử dụng action Cypress chính thức
+        uses: cypress-io/github-action@v6
         with:
-          working-directory: frontend # Chỉ định thư mục làm việc
-          start: npm run dev # Lệnh để khởi động frontend server
-          # Lệnh để khởi động backend server, chạy nền (&)
-          # Cần cài đặt wait-on để chờ backend sẵn sàng
-          # `npm install --prefix frontend wait-on`
-          # build: mvn -B package --file backend/pom.xml
-          # command: |
-          #  java -jar backend/target/*.jar &
-          #  npx wait-on http://localhost:8080 && npm run test:e2e
-          # LƯU Ý: Phần chạy song song này khá phức tạp.
-          # Để đơn giản cho bài tập lớn, bạn có thể chỉ chạy unit test trong CI
-          # và chạy E2E test thủ công trên máy.
-          # Hoặc chỉ tập trung vào test unit/component/integration đã mock.
+          # Thư mục làm việc của Cypress
+          working-directory: frontend
+          
+          # Lệnh Build: Chạy trước khi test
+          # 1. Build backend thành file .jar
+          # 2. Cài đặt wait-on để chờ server
+          build: |
+            mvn -B package --file ../backend/pom.xml
+            npm install --prefix frontend wait-on
 
-          # Cấu hình đơn giản hơn (chạy E2E test với mock)
-          # Nếu các bài test E2E của bạn được viết để mock API, bạn không cần chạy backend
-          # command: npm run test:e2e
+          # Lệnh Start: Các lệnh để khởi động server
+          # 1. Chạy backend server ở chế độ nền (&)
+          # 2. Chạy frontend server ở chế độ nền (&)
+          # 3. Dùng wait-on để đợi cả 2 server sẵn sàng trước khi chạy test
+          start: |
+            java -jar ../backend/target/*.jar &
+            npm run dev &
+            npx wait-on http://localhost:8080 http://localhost:5173
+          
+          # Lệnh Test: Lệnh để chạy Cypress
+          command: npm run test:e2e
+
+          # Tùy chọn để Cypress không mở trình duyệt (chạy headless)
+          headless: true
+        
+        # Biến môi trường để đảm bảo Cypress kết nối đúng địa chỉ
+        env:
+          CYPRESS_BASE_URL: http://localhost:5173
+
+      # --- LƯU LẠI KẾT QUẢ TEST ---
+      - name: Upload Test Artifacts
+        if: failure() # Chỉ chạy bước này khi có test thất bại
+        uses: actions/upload-artifact@v4
+        with:
+          name: cypress-artifacts
+          path: |
+            frontend/cypress/videos/
+            frontend/cypress/screenshots/
