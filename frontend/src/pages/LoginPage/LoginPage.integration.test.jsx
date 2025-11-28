@@ -46,7 +46,7 @@ describe('LoginPage Integration Tests', () => {
 
     await waitFor(() => {
       expect(authService.login).toHaveBeenCalledWith('validuser', 'validpass');
-      expect(screen.getByTestId('api-message')).toHaveTextContent('Đăng nhập thành công');
+      expect(screen.getByTestId('login-message')).toHaveTextContent('Đăng nhập thành công');
     });
   });
 
@@ -68,7 +68,7 @@ describe('LoginPage Integration Tests', () => {
 
     await waitFor(() => {
       expect(authService.login).toHaveBeenCalled();
-      expect(screen.getByTestId('api-message')).toHaveTextContent('Sai thông tin đăng nhập');
+      expect(screen.getByTestId('login-message')).toHaveTextContent('Sai thông tin đăng nhập');
     });
   });
 
@@ -87,7 +87,7 @@ describe('LoginPage Integration Tests', () => {
     fireEvent.click(screen.getByTestId('login-button'));
 
     await waitFor(() => {
-      expect(screen.getByTestId('api-message')).toHaveTextContent('Đăng nhập thất bại');
+      expect(screen.getByTestId('login-message')).toHaveTextContent('Đăng nhập thất bại');
     });
   });
 });

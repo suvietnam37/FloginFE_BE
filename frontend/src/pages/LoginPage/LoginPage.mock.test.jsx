@@ -61,7 +61,7 @@ describe('LoginPage - Mock Tests', () => {
     });
     fireEvent.click(screen.getByTestId('login-button'));
 
-    const msg = await screen.findByTestId('api-message');
+    const msg = await screen.findByTestId('login-message');
     expect(msg).toBeInTheDocument();
     expect(msg).toHaveTextContent('Sai tên đăng nhập hoặc mật khẩu');
   });
