@@ -15,7 +15,7 @@ describe('LoginPage Integration Tests', () => {
 
     const usernameInput = screen.getByTestId('username-input');
     const passwordInput = screen.getByTestId('password-input');
-    const submitButton = screen.getByTestId('submit-btn');
+    const submitButton = screen.getByTestId('login-button');
 
     expect(usernameInput).toBeInTheDocument();
     expect(passwordInput).toBeInTheDocument();
@@ -42,7 +42,7 @@ describe('LoginPage Integration Tests', () => {
       target: { value: 'validpass' }
     });
 
-    fireEvent.click(screen.getByTestId('submit-btn'));
+    fireEvent.click(screen.getByTestId('login-button'));
 
     await waitFor(() => {
       expect(authService.login).toHaveBeenCalledWith('validuser', 'validpass');
@@ -64,7 +64,7 @@ describe('LoginPage Integration Tests', () => {
       target: { value: 'wrongpass' }
     });
 
-    fireEvent.click(screen.getByTestId('submit-btn'));
+    fireEvent.click(screen.getByTestId('login-button'));
 
     await waitFor(() => {
       expect(authService.login).toHaveBeenCalled();
@@ -84,7 +84,7 @@ describe('LoginPage Integration Tests', () => {
       target: { value: 'anypass' }
     });
 
-    fireEvent.click(screen.getByTestId('submit-btn'));
+    fireEvent.click(screen.getByTestId('login-button'));
 
     await waitFor(() => {
       expect(screen.getByTestId('api-message')).toHaveTextContent('Đăng nhập thất bại');

@@ -34,7 +34,7 @@ describe('LoginPage - Mock Tests', () => {
     fireEvent.change(screen.getByTestId('password-input'), {
       target: { value: '123456' },
     });
-    fireEvent.click(screen.getByTestId('submit-btn'));
+    fireEvent.click(screen.getByTestId('login-button'));
 
     const msg = await screen.findByTestId('api-message');
     expect(msg).toBeInTheDocument();
@@ -59,7 +59,7 @@ describe('LoginPage - Mock Tests', () => {
     fireEvent.change(screen.getByTestId('password-input'), {
       target: { value: 'wrong' },
     });
-    fireEvent.click(screen.getByTestId('submit-btn'));
+    fireEvent.click(screen.getByTestId('login-button'));
 
     const msg = await screen.findByTestId('api-message');
     expect(msg).toBeInTheDocument();
