@@ -30,8 +30,9 @@ const LoginPage = () => {
     // Nếu không có lỗi validation, mới tiếp tục gọi API
     try {
       const res = await authService.login(username, password);
+      console.log('API Response:', res.data);
       setApiMessage({ type: 'success', text: res.data.message || 'Đăng nhập thành công!' });
-      setTimeout(() => navigate('/products'), 1000);
+      navigate('/products');
     } catch (err) {
       const text = err.response?.data?.message || 'Đăng nhập thất bại';
       setApiMessage({ type: 'error', text });

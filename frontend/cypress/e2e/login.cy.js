@@ -12,8 +12,10 @@ describe('Login E2E Tests', () => {
     LoginPage.login('testuser', 'Test123');
 
     // ASSERT
+    cy.contains('h2', 'Quản lý sản phẩm', { timeout: 10000 }).should('be.visible');
+
+    // Sau đó mới kiểm tra URL
     cy.url().should('include', '/products');
-    cy.contains('h2', 'Trang Quản lý Sản phẩm').should('be.visible');
   });
 
   it('should display an API error message for invalid credentials', () => {

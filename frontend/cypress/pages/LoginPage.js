@@ -1,7 +1,10 @@
 // frontend/cypress/pages/LoginPage.js
-
 class LoginPage {
-  // Các phương thức để lấy element
+  
+  visit() {
+    cy.visit('/login');
+  }
+
   getUsernameInput() {
     return cy.get('[data-testid="username-input"]');
   }
@@ -25,12 +28,8 @@ class LoginPage {
 
   // Phương thức tổng hợp các hành động
   login(username, password) {
-    if (username) {
-      this.getUsernameInput().type(username);
-    }
-    if (password) {
-      this.getPasswordInput().type(password);
-    }
+    if (username) this.getUsernameInput().clear().type(username);
+    if (password) this.getPasswordInput().clear().type(password);
     this.getLoginButton().click();
   }
 }

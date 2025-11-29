@@ -56,6 +56,7 @@ function ProductPage() {
 
   // Xử lý khi người dùng nhấn nút "Sửa"
   const handleEdit = (product) => {
+    console.log("Editing product:", product);
     // Đổ dữ liệu của sản phẩm vào form để bắt đầu chỉnh sửa
     setFormData({ id: product.id, name: product.name, price: product.price, quantity: product.quantity });
   };
