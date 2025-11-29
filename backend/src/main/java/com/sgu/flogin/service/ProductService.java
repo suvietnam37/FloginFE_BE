@@ -16,9 +16,17 @@ public class ProductService {
     private ProductRepository productRepository;
 
     public ProductDto createProduct(ProductDto productDto) {
-        Product product = mapToEntity(productDto);
+        Product product = new Product();
+        // Gán dữ liệu từ DTO
+        product.setName(productDto.getName());
+        product.setPrice(productDto.getPrice());
+        product.setQuantity(productDto.getQuantity());
+
+        // Lưu vào CSDL, Hibernate/JPA sẽ tự động gán ID vào đối tượng savedProduct
         Product savedProduct = productRepository.save(product);
-        return mapToDto(savedProduct);
+
+        // Chuyển đổi lại sang DTO để trả về, lần này đã có ID
+        return mapToDto(savedProduct); // mapToDto phải gán cả ID
     }
 
     public ProductDto getProductById(Long id) {

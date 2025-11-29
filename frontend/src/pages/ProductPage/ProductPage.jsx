@@ -35,31 +35,48 @@ function ProductPage() {
   // Xử lý khi submit form (cả tạo mới và cập nhật)
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const productData = { name: formData.name, price: +formData.price, quantity: +formData.quantity };
+    // Tạo đối tượng productData chỉ với các trường cần thiết
+    const productData = {
+        name: formData.name,
+        price: parseFloat(formData.price) || 0, // Chuyển đổi sang số
+        quantity: parseInt(formData.quantity, 10) || 0, // Chuyển đổi sang số
+    };
     
     try {
-      if (isEditing) { // Nếu đang ở chế độ sửa -> gọi API update
-        const res = await productService.updateProduct(formData.id, productData);
-        // Cập nhật lại sản phẩm trong danh sách state
-        setProducts(prev => prev.map(p => p.id === formData.id ? res.data : p));
-      } else { // Nếu không -> gọi API create
-        const res = await productService.createProduct(productData);
-        // Thêm sản phẩm mới vào danh sách state
-        setProducts(prev => [...prev, res.data]);
-      }
-      resetForm(); // Sau khi thành công, reset form
+        if (isEditing) {
+            // Khi UPDATE, formData.id đã có ID đúng từ lúc nhấn nút "Sửa"
+            const response = await productService.updateProduct(formData.id, productData);
+            
+            // Cập nhật lại sản phẩm trong danh sách với dữ liệu mới nhất từ server
+            setProducts(prevProducts =>
+                prevProducts.map(p => (p.id === formData.id ? response.data : p))
+            );
+        } else {
+            // Khi CREATE
+            const response = await productService.createProduct(productData);
+
+            // RẤT QUAN TRỌNG: Thêm sản phẩm mới vào danh sách bằng cách sử dụng
+            // chính đối tượng mà backend trả về (response.data), vì nó chứa ID thật.
+            setProducts(prevProducts => [...prevProducts, response.data]);
+        }
+        resetForm(); // Reset form sau khi thành công
     } catch (error) {
-      console.error("Failed to save product:", error);
-      alert("Lưu sản phẩm thất bại!");
+        console.error("Lỗi khi lưu sản phẩm:", error);
+        alert("Lưu sản phẩm thất bại!");
     }
-  };
+};
 
   // Xử lý khi người dùng nhấn nút "Sửa"
   const handleEdit = (product) => {
-    console.log("Editing product:", product);
-    // Đổ dữ liệu của sản phẩm vào form để bắt đầu chỉnh sửa
-    setFormData({ id: product.id, name: product.name, price: product.price, quantity: product.quantity });
-  };
+    // Đảm bảo rằng đối tượng 'product' được truyền vào đây là đối tượng
+    // đầy đủ từ state 'products', có chứa ID thật.
+    setFormData({
+        id: product.id,
+        name: product.name,
+        price: product.price.toString(), // Chuyển về string để hiển thị trong input
+        quantity: product.quantity.toString(),
+    });
+};
 
   // Xử lý khi người dùng nhấn nút "Xóa"
   const handleDelete = async (id) => {
