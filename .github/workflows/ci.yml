@@ -1,4 +1,6 @@
-name: Complete CI/CD Pipeline
+# TRONG FILE: .github/workflows/ci.yml
+
+name: Flogin CI/CD Pipeline
 
 on:
   push:
@@ -9,8 +11,7 @@ on:
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
-    
-    # Khởi tạo một service container cho database PostgreSQL
+
     services:
       postgres:
         image: postgres:14
@@ -30,53 +31,57 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up JDK 17 and Node.js 18
+      - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
-      - uses: actions/setup-node@v4
+      
+      # SỬA LỖI 1: Nâng cấp phiên bản Node.js
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '20' # Sử dụng phiên bản 20
           cache: 'npm'
           cache-dependency-path: frontend/package-lock.json
-      
-      # Chạy tất cả các test của Backend
-      - name: Run Backend Tests
+
+      - name: Backend Tests
         run: mvn -B test --file backend/pom.xml
         env:
           SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/flogin_db_ci
           SPRING_DATASOURCE_USERNAME: runner
           SPRING_DATASOURCE_PASSWORD: password
 
-      # Cài đặt và chạy tất cả các test của Frontend (Unit/Component)
-      - name: Run Frontend Unit/Component Tests
+      - name: Frontend Install & Unit Tests
         run: |
           npm install --prefix frontend
           npm test --prefix frontend
 
-      # Chạy E2E Tests
-      - name: Run End-to-End Tests with Cypress
-        uses: cypress-io/github-action@v6
-        with:
-          working-directory: frontend
-          build: |
-            mvn -B package --file ../backend/pom.xml
-            npm install --prefix frontend wait-on
-          start: |
-            java -jar ../backend/target/*.jar &
-            npm run dev &
-            npx wait-on http://localhost:8080 http://localhost:5173
-          command: npm run test:e2e
-          headless: true
+      # SỬA LỖI 2: Cấu trúc lại bước E2E
+      - name: Frontend E2E Tests (Cypress)
+        run: |
+          # Bước 1: Build backend
+          echo "Building backend..."
+          mvn -B package --file backend/pom.xml -DskipTests
+          
+          # Bước 2: Khởi động backend ở chế độ nền
+          echo "Starting backend server..."
+          java -jar backend/target/*.jar &
+          
+          # Bước 3: Cài đặt wait-on và chạy E2E
+          echo "Installing wait-on and running E2E tests..."
+          cd frontend
+          npm install wait-on
+          npx wait-on http://localhost:8080 && npm run test:e2e
         env:
-          CYPRESS_BASE_URL: http://localhost:5173
+          # Truyền biến môi trường cho cả backend và frontend/cypress
           SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/flogin_db_ci
           SPRING_DATASOURCE_USERNAME: runner
           SPRING_DATASOURCE_PASSWORD: password
-          
-      # Upload các video và screenshot khi E2E test thất bại
-      - name: Upload Cypress Artifacts
+          # Cypress sẽ tự động đọc biến môi trường này nếu có
+          CYPRESS_BASE_URL: http://localhost:5173
+
+      - name: Upload Test Artifacts on Failure
         if: failure()
         uses: actions/upload-artifact@v4
         with:

@@ -1,87 +1,97 @@
-# Tên của workflow, sẽ hiển thị trên tab "Actions" của GitHub
+# Tên của workflow
 name: Login Tests CI
 
-# Định nghĩa các sự kiện sẽ kích hoạt workflow này
+# Kích hoạt workflow
 on:
-  # Chạy khi có code được push lên nhánh `main` hoặc `develop`
   push:
     branches: [ main, develop ]
-  # Chạy khi có Pull Request được mở hoặc cập nhật nhắm vào nhánh `main`
   pull_request:
     branches: [ main ]
 
-# Định nghĩa các công việc (jobs) sẽ được thực hiện
 jobs:
-  # Đặt tên cho job, ví dụ: "build-and-test"
   test-login-flow:
-    # Chạy job này trên một máy ảo Ubuntu phiên bản mới nhất
     runs-on: ubuntu-latest
 
-    # Định nghĩa các bước (steps) tuần tự trong job
+    # Khởi tạo một service container cho database PostgreSQL
+    # Điều này cần thiết để backend có thể kết nối và chạy
+    services:
+      postgres:
+        image: postgres:14
+        env:
+          POSTGES_DB: flogin_db_ci
+          POSTGRES_USER: runner
+          POSTGRES_PASSWORD: password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
-      # Bước 1: Lấy mã nguồn từ repository về máy ảo
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # --- CÀI ĐẶT MÔI TRƯỜNG CHO BACKEND ---
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
-
-      # --- CÀI ĐẶT MÔI TRƯỜNG CHO FRONTEND ---
-      - name: Set up Node.js 18
+      
+      - name: Set up Node.js 20
         uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
 
-      # Bước 2: Cài đặt các gói phụ thuộc cho Frontend
       - name: Install Frontend Dependencies
         run: npm install --prefix frontend
 
-      # Bước 3: Chạy các bài Unit Test & Integration Test của Backend
-      # Lệnh này sẽ chạy tất cả các file test, bao gồm cả AuthSerivceTest và AuthControllerIntegrationTest
       - name: Run Backend Tests
         run: mvn -B test --file backend/pom.xml
+        env:
+          # Cung cấp biến môi trường để backend kết nối đúng DB
+          SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/flogin_db_ci
+          SPRING_DATASOURCE_USERNAME: runner
+          SPRING_DATASOURCE_PASSWORD: password
 
-      # Bước 4: Chạy các bài Unit Test & Integration Test của Frontend cho Login
-      # Chúng ta có thể chỉ định chỉ chạy các file test có tên chứa "Login"
       - name: Run Frontend Login Unit/Integration Tests
         run: npm test --prefix frontend -- src/pages/LoginPage/
 
-      # Bước 5: Chạy E2E Test cho Login bằng Cypress
-      # Quan trọng: Cần phải khởi động cả server Backend và Frontend
-      # Chúng ta sẽ sử dụng action chính thức của Cypress để làm việc này dễ dàng hơn
+      # === PHẦN E2E ĐÃ ĐƯỢC SỬA LẠI HOÀN CHỈNH ===
       - name: Run Frontend Login E2E Tests with Cypress
         uses: cypress-io/github-action@v6
         with:
-          # Thư mục làm việc cho action này
           working-directory: frontend
-          # Lệnh để khởi động server backend và chạy nền
-          # Cần build backend ra file .jar trước
-          # (Lệnh này có thể phức tạp, xem phần lưu ý bên dưới)
-          # build: mvn -B package --file ../backend/pom.xml
-          # start: java -jar ../backend/target/*.jar & npm run dev
-          
-          # Cách đơn giản hơn cho bài tập lớn: Test E2E với dữ liệu mock
-          # Nếu bạn đã có các bài test E2E không phụ thuộc vào backend thật, bạn chỉ cần chạy:
-          start: npm run dev
-          # Chỉ định chỉ chạy file test của Login
-          spec: cypress/e2e/login.cy.js
+          spec: cypress/e2e/login.cy.js # Chỉ chạy file test của Login
 
-      # Bước 6: (Yêu cầu "Generate test reports") - Lưu lại kết quả
-      # Upload báo cáo test của Maven (backend)
+          # Build backend ra file .jar trước
+          build: mvn -B package --file ../backend/pom.xml -DskipTests
+          
+          # Khởi động cả 2 server và đợi
+          start: |
+            java -jar ../backend/target/*.jar &
+            npm run dev &
+            npm install --prefix frontend wait-on && npx wait-on http://localhost:8080 http://localhost:5173
+
+        env:
+          # Truyền biến môi trường cho cả backend và cypress
+          CYPRESS_BASE_URL: http://localhost:5173
+          SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/flogin_db_ci
+          SPRING_DATASOURCE_USERNAME: runner
+          SPRING_DATASOURCE_PASSWORD: password
+
       - name: Upload Backend Test Reports
-        if: always() # Luôn chạy bước này, kể cả khi test thất bại
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: backend-test-reports
           path: backend/target/surefire-reports/
 
-      # Upload các video và screenshot khi Cypress chạy thất bại
       - name: Upload Frontend E2E Test Artifacts
-        if: failure() # Chỉ chạy bước này khi test E2E thất bại
+        if: failure()
         uses: actions/upload-artifact@v4
         with:
           name: cypress-artifacts
