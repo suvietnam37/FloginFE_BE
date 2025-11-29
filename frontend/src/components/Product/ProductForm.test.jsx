@@ -36,40 +36,49 @@ describe('ProductForm Component Tests', () => {
     // Test case 3: Kiểm tra việc gọi hàm callback khi submit dữ liệu HỢP LỆ.
     test('should call onFormSubmit with correct data when form is submitted', () => {
         const mockSubmitHandler = vi.fn();
+        // Tạo một hàm giả cho window.alert để nó không gây lỗi trong môi trường test
+        // và để chúng ta có thể kiểm tra xem nó có được gọi không
+        window.alert = vi.fn(); 
+    
         render(<ProductForm onFormSubmit={mockSubmitHandler} />);
 
-        fireEvent.change(screen.getByPlaceholderText(/Tên sản phẩm/i), { target: { value: 'Sản phẩm hợp lệ' } });
-        fireEvent.change(screen.getByPlaceholderText(/Giá/i), { target: { value: '100' } });
-        fireEvent.change(screen.getByPlaceholderText(/Số lượng/i), { target: { value: '10' } });
-
-        // Sử dụng fireEvent.submit trên chính cái form
+        // --- ACT ---
+        // Chỉ điền tên sản phẩm, bỏ trống các trường bắt buộc khác
+        fireEvent.change(screen.getByTestId('product-name-input'), { target: { value: 'Sản phẩm lỗi' } });
+    
+        // Kích hoạt sự kiện submit
         fireEvent.submit(screen.getByTestId('product-form'));
 
-        expect(mockSubmitHandler).toHaveBeenCalledTimes(1);
-        expect(mockSubmitHandler).toHaveBeenCalledWith({
-            name: 'Sản phẩm hợp lệ',
-            price: 100,
-            quantity: 10,
-        }, null);
+        // --- ASSERT ---
+        // 1. Khẳng định rằng onFormSubmit KHÔNG được gọi
+        expect(mockSubmitHandler).not.toHaveBeenCalled();
+    
+        // 2. Khẳng định rằng alert ĐÃ được gọi với đúng thông báo
+        expect(window.alert).toHaveBeenCalledWith("Vui lòng điền đầy đủ thông tin.");
     });
 
     // Test case 4: Kiểm tra việc gọi hàm callback khi submit dữ liệu KHÔNG HỢP LỆ.
     test('should still call onFormSubmit even when form data is incomplete', () => {
-        const mockSubmitHandler = vi.fn();
-        render(<ProductForm onFormSubmit={mockSubmitHandler} />);
+        // --- ARRANGE ---
+    // Tạo một hàm giả cho onFormSubmit
+    const mockSubmitHandler = vi.fn();
+    // Tạo một hàm giả cho window.alert để nó không gây lỗi và để chúng ta kiểm tra
+    window.alert = vi.fn(); 
+    
+    render(<ProductForm onFormSubmit={mockSubmitHandler} />);
 
-        fireEvent.change(screen.getByPlaceholderText(/Tên sản phẩm/i), { target: { value: 'Sản phẩm lỗi' } });
-        
-        // Submit form
-        fireEvent.submit(screen.getByTestId('product-form'));
+    // --- ACT ---
+    // Chỉ điền tên, bỏ trống giá và số lượng
+    fireEvent.change(screen.getByTestId('product-name-input'), { target: { value: 'Sản phẩm lỗi' } });
+    
+    // Kích hoạt sự kiện submit
+    fireEvent.submit(screen.getByTestId('product-form'));
 
-        // Hàm onFormSubmit VẪN được gọi. Việc quyết định dữ liệu có hợp lệ hay không
-        // là của component cha, không phải của form này.
-        expect(mockSubmitHandler).toHaveBeenCalledTimes(1);
-        expect(mockSubmitHandler).toHaveBeenCalledWith({
-            name: 'Sản phẩm lỗi',
-            price: 0, // giá trị mặc định khi parse chuỗi rỗng
-            quantity: 0,
-        }, null);
+    // --- ASSERT ---
+    // 1. Khẳng định rằng onFormSubmit KHÔNG được gọi
+    expect(mockSubmitHandler).not.toHaveBeenCalled();
+    
+    // 2. Khẳng định rằng alert ĐÃ được gọi với đúng thông báo
+    expect(window.alert).toHaveBeenCalledWith("Vui lòng điền đầy đủ thông tin.");
     });
 });

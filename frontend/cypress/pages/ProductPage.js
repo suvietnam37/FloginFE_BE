@@ -15,9 +15,13 @@ class ProductPage {
     if (price) this.getPriceInput().clear().type(price);
     if (quantity) this.getQuantityInput().clear().type(quantity);
   }
+
+  getForm() {
+    return cy.get('[data-testid="product-form"]');
+  }
   
   submitForm() {
-    this.getSubmitButton().click();
+    this.getForm().submit();
   }
 
   // --- List Elements & Actions ---

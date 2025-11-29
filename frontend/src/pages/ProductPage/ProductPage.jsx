@@ -1,92 +1,65 @@
 import React, { useState, useEffect } from 'react';
 import productService from '../../services/productService';
+import ProductForm from '../../components/Product/ProductForm';
+import ProductList from '../../components/Product/ProductList';
 import './ProductPage.css';
 
 function ProductPage() {
   const [products, setProducts] = useState([]);
-  const [formData, setFormData] = useState({ id: null, name: '', price: '', quantity: '' });
-  const isEditing = formData.id !== null;
+  const [productToEdit, setProductToEdit] = useState(null); // Dùng để truyền xuống form khi sửa
 
+  // Chạy một lần khi component được render để tải danh sách sản phẩm
   useEffect(() => {
     loadProducts();
   }, []);
 
+  // Hàm tải danh sách sản phẩm từ API
   const loadProducts = async () => {
     try {
-      const res = await productService.getAllProducts();
-      setProducts(res.data.content || res.data);
+      const response = await productService.getAllProducts();
+      // API trả về đối tượng Page, lấy mảng sản phẩm từ trường 'content'
+      setProducts(response.data.content || []);
     } catch (error) {
-      console.error("Failed to load products:", error);
-      alert("Không thể tải danh sách sản phẩm!");
+      console.error("Lỗi khi tải danh sách sản phẩm:", error);
+      alert("Không thể tải danh sách sản phẩm.");
     }
   };
 
-  // Xử lý thay đổi trên các ô input của form
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  // Reset form về trạng thái ban đầu (để tạo mới)
-  const resetForm = () => {
-    setFormData({ id: null, name: '', price: '', quantity: '' });
-  };
-
-  // Xử lý khi submit form (cả tạo mới và cập nhật)
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    // Tạo đối tượng productData chỉ với các trường cần thiết
-    const productData = {
-        name: formData.name,
-        price: parseFloat(formData.price) || 0, // Chuyển đổi sang số
-        quantity: parseInt(formData.quantity, 10) || 0, // Chuyển đổi sang số
-    };
-    
+  // Hàm được gọi khi form (ProductForm) được submit
+  const handleFormSubmit = async (productData, id) => {
     try {
-        if (isEditing) {
-            // Khi UPDATE, formData.id đã có ID đúng từ lúc nhấn nút "Sửa"
-            const response = await productService.updateProduct(formData.id, productData);
-            
-            // Cập nhật lại sản phẩm trong danh sách với dữ liệu mới nhất từ server
-            setProducts(prevProducts =>
-                prevProducts.map(p => (p.id === formData.id ? response.data : p))
-            );
-        } else {
-            // Khi CREATE
-            const response = await productService.createProduct(productData);
-
-            // RẤT QUAN TRỌNG: Thêm sản phẩm mới vào danh sách bằng cách sử dụng
-            // chính đối tượng mà backend trả về (response.data), vì nó chứa ID thật.
-            setProducts(prevProducts => [...prevProducts, response.data]);
-        }
-        resetForm(); // Reset form sau khi thành công
+      if (id) {
+        // --- Logic Cập nhật ---
+        const response = await productService.updateProduct(id, productData);
+        setProducts(prevProducts =>
+          prevProducts.map(p => (p.id === id ? response.data : p))
+        );
+      } else {
+        // --- Logic Tạo mới ---
+        const response = await productService.createProduct(productData);
+        setProducts(prevProducts => [...prevProducts, response.data]);
+      }
+      setProductToEdit(null); // Reset form về trạng thái tạo mới
     } catch (error) {
-        console.error("Lỗi khi lưu sản phẩm:", error);
-        alert("Lưu sản phẩm thất bại!");
+      console.error("Lỗi khi lưu sản phẩm:", error);
+      alert("Lưu sản phẩm thất bại!");
     }
-};
-
-  // Xử lý khi người dùng nhấn nút "Sửa"
+  };
+  
+  // Hàm được gọi khi nhấn nút "Sửa" trong danh sách (ProductList)
   const handleEdit = (product) => {
-    // Đảm bảo rằng đối tượng 'product' được truyền vào đây là đối tượng
-    // đầy đủ từ state 'products', có chứa ID thật.
-    setFormData({
-        id: product.id,
-        name: product.name,
-        price: product.price.toString(), // Chuyển về string để hiển thị trong input
-        quantity: product.quantity.toString(),
-    });
-};
+    setProductToEdit(product);
+  };
 
-  // Xử lý khi người dùng nhấn nút "Xóa"
+  // Hàm được gọi khi nhấn nút "Xóa" trong danh sách (ProductList)
   const handleDelete = async (id) => {
     if (window.confirm('Bạn có chắc chắn muốn xóa sản phẩm này?')) {
       try {
         await productService.deleteProduct(id);
-        // Lọc sản phẩm đã bị xóa ra khỏi danh sách state
-        setProducts(prev => prev.filter(p => p.id !== id));
+        // Lọc sản phẩm đã xóa ra khỏi state để cập nhật UI
+        setProducts(prevProducts => prevProducts.filter(p => p.id !== id));
       } catch (error) {
-        console.error("Failed to delete product:", error);
+        console.error("Lỗi khi xóa sản phẩm:", error);
         alert("Xóa sản phẩm thất bại!");
       }
     }
@@ -95,81 +68,22 @@ function ProductPage() {
   return (
     <div className="product-page" data-testid="product-page">
       <h2 data-testid="title">Quản lý sản phẩm</h2>
-
-      {/* Form để tạo mới hoặc cập nhật sản phẩm */}
-      <form onSubmit={handleSubmit} className="product-form" data-testid="product-form">
-        <input
-          placeholder="Tên sản phẩm"
-          name="name"
-          value={formData.name}
-          onChange={handleInputChange}
-          data-testid="product-name-input"
-          required
-        />
-        <input
-          placeholder="Giá"
-          name="price"
-          type="number"
-          value={formData.price}
-          onChange={handleInputChange}
-          data-testid="product-price-input"
-          required
-        />
-        <input
-          placeholder="Số lượng"
-          name="quantity"
-          type="number"
-          value={formData.quantity}
-          onChange={handleInputChange}
-          data-testid="product-quantity-input"
-          required
-        />
-        <button type="submit" data-testid="product-submit-button">
-          {isEditing ? 'Lưu' : 'Thêm'}
-        </button>
-        {isEditing && (
-            <button type="button" onClick={resetForm} data-testid="cancel-edit-button">
-                Hủy
-            </button>
-        )}
-      </form>
-
-      {/* Bảng hiển thị danh sách sản phẩm */}
-      <table className="product-table" data-testid="product-table">
-        <thead>
-          <tr>
-            <th>Tên sản phẩm</th>
-            <th>Giá</th>
-            <th>Số lượng</th>
-            <th>Hành động</th>
-          </tr>
-        </thead>
-        <tbody>
-          {products.map(p => (
-            <tr key={p.id} data-testid={`product-item-${p.id}`}>
-              <td>{p.name}</td>
-              <td>{p.price}</td>
-              <td>{p.quantity}</td>
-              <td className="actions">
-                <button 
-                    onClick={() => handleEdit(p)} 
-                    className="btn-edit" 
-                    data-testid={`btn-edit-${p.id}`}
-                >
-                  Sửa
-                </button>
-                <button 
-                    onClick={() => handleDelete(p.id)} 
-                    className="btn-delete" 
-                    data-testid={`btn-delete-${p.id}`}
-                >
-                  Xóa
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      
+      {/* Component Form: nhận dữ liệu để sửa và hàm xử lý submit */}
+      <ProductForm
+        onFormSubmit={handleFormSubmit}
+        productToEdit={productToEdit}
+        clearEdit={() => setProductToEdit(null)}
+      />
+      
+      <hr style={{ margin: '32px 0' }} />
+      
+      {/* Component List: nhận danh sách sản phẩm và các hàm xử lý hành động */}
+      <ProductList
+        products={products}
+        onEdit={handleEdit}
+        onDelete={handleDelete}
+      />
     </div>
   );
 }

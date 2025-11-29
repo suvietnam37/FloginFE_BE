@@ -9,74 +9,80 @@ describe('Product CRUD E2E Tests', () => {
     cy.session('loggedInUser', () => {
       LoginPage.visit();
       LoginPage.login('testuser', 'Test123');
-
       cy.url().should('include', '/products');
-      cy.contains('h2', 'Quản lý sản phẩm').should('be.visible');
     });
-
     ProductPage.visit();
   });
 
-  it('should allow a user to CREATE and READ a new product', () => {
-    const productName = `Sản phẩm Test ${Date.now()}`;
-    
-    // CREATE
-    ProductPage.fillProductForm({ name: productName, price: '12345', quantity: '10' });
-    ProductPage.submitForm();
-
-    // READ (Assert)
-    ProductPage.findProductByName(productName)
-      .should('be.visible')
-      .and('contain', '12345')
-      .and('contain', '10');
-  });
-
-  it('should allow a user to UPDATE a product', () => {
-    const initialName = `Sản phẩm để Update ${Date.now()}`;
+  it('should correctly handle the full CRUD lifecycle of a product', () => {
+    const initialName = `Sản phẩm CRUD Test ${Date.now()}`;
     const updatedName = `ĐÃ UPDATE - ${Date.now()}`;
 
-    // Dùng cy.intercept để "nghe" các request API
+    // --- 1. CREATE ---
+    cy.log('**--- STARTING CREATE TEST ---**');
+
+    // "Lắng nghe" request tạo sản phẩm
     cy.intercept('POST', '/api/products').as('createProduct');
-    cy.intercept('PUT', '/api/products/*').as('updateProduct');
 
-    // --- SETUP: Tạo sản phẩm ---
-    ProductPage.fillProductForm({ name: initialName, price: '5000', quantity: '5' });
-    ProductPage.submitForm();
+    ProductPage.fillProductForm({ name: initialName, price: '1000', quantity: '10' });
 
-    // Chờ cho request createProduct hoàn thành và lấy ID từ response
-    cy.wait('@createProduct').then(({ response }) => {
-        // Lấy ID thật từ backend
-        const productId = response.body.id;
-        expect(productId).to.be.a('number'); // Đảm bảo ID là một số
+    // Đảm bảo nút submit có thể click được trước khi nhấn
+    ProductPage.getSubmitButton().should('not.be.disabled').debug().click();
 
-        // --- UPDATE ---
-        // Tìm đúng hàng dựa trên ID thật và nhấn nút Sửa
-        cy.get(`[data-testid="btn-edit-${productId}"]`).click();
-        
-        ProductPage.fillProductForm({ name: updatedName });
-        ProductPage.submitForm();
+    // Chờ cho request tạo sản phẩm hoàn thành và kiểm tra status code
+    cy.wait('@createProduct').its('response.statusCode').should('eq', 201);
 
-        // Chờ cho request update hoàn thành
-        cy.wait('@updateProduct').its('response.statusCode').should('eq', 200);
+    // --- 2. READ (Assert Create) ---
+    cy.log('**--- STARTING READ ASSERT ---**');
 
-        // --- ASSERT UPDATE ---
-        ProductPage.findProductByName(initialName).should('not.exist');
-        ProductPage.findProductByName(updatedName).should('be.visible');
+    // Chờ cho đến khi tên sản phẩm mới xuất hiện trên giao diện
+    ProductPage.findProductByName(initialName)
+      .should('be.visible')
+      .and('contain', '1000')
+      .and('contain', '10');
+
+
+    // --- 3. UPDATE ---
+    cy.log('**--- STARTING UPDATE TEST ---**');
+
+    // Tìm hàng chứa sản phẩm vừa tạo và lấy ra ID thật của nó
+    ProductPage.findProductByName(initialName).invoke('attr', 'data-testid').then((testId) => {
+      // testId sẽ có dạng "product-item-5"
+      const productId = testId.split('-').pop();
+
+      // "Lắng nghe" request cập nhật với đúng ID
+      cy.intercept('PUT', `/api/products/${productId}`).as('updateProduct');
+
+      // Nhấn nút Sửa trên đúng hàng đó
+      cy.get(`[data-testid="btn-edit-${productId}"]`).click();
+
+      // Điền thông tin mới và submit
+      ProductPage.fillProductForm({ name: updatedName });
+      ProductPage.getSubmitButton().should('not.be.disabled').click();
+
+      // Chờ cho request cập nhật hoàn thành
+      cy.wait('@updateProduct').its('response.statusCode').should('eq', 200);
+
+      // --- 4. ASSERT UPDATE ---
+      cy.log('**--- STARTING UPDATE ASSERT ---**');
+      ProductPage.findProductByName(initialName).should('not.exist');
+      ProductPage.findProductByName(updatedName).should('be.visible');
+
+      // --- 5. DELETE ---
+      cy.log('**--- STARTING DELETE TEST ---**');
+      
+      // "Lắng nghe" request xóa
+      cy.intercept('DELETE', `/api/products/${productId}`).as('deleteProduct');
+
+      // Nhấn nút Xóa trên hàng của sản phẩm đã được cập nhật
+      ProductPage.findProductByName(updatedName).find(`[data-testid^="btn-delete-"]`).click();
+
+      // Chờ cho request xóa hoàn thành
+      cy.wait('@deleteProduct').its('response.statusCode').should('eq', 204);
+
+      // --- 6. ASSERT DELETE ---
+      cy.log('**--- STARTING DELETE ASSERT ---**');
+      ProductPage.findProductByName(updatedName).should('not.exist');
     });
-  });
-
-  it('should allow a user to DELETE a product', () => {
-    const productName = `Sản phẩm để Xóa ${Date.now()}`;
-
-    // Setup: Tạo một sản phẩm để xóa
-    ProductPage.fillProductForm({ name: productName, price: '111', quantity: '1' });
-    ProductPage.submitForm();
-    ProductPage.findProductByName(productName).should('be.visible');
-    
-    // DELETE
-    ProductPage.findProductByName(productName).find('[data-testid^="btn-delete-"]').click();
-
-    // Assert Delete
-    ProductPage.findProductByName(productName).should('not.exist');
   });
 });

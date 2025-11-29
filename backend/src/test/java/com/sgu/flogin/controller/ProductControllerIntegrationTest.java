@@ -44,11 +44,10 @@ class ProductControllerIntegrationTest {
     @Test
     @DisplayName("GET /api/products - Lay danh sach san pham")
     void testGetAllProducts() throws Exception {
-        List<ProductDto> products = Arrays.asList(
-            new ProductDto("Laptop", 15000000, 10),
-            new ProductDto("Mouse", 200000, 50)
-        );
+        ProductDto p1 = new ProductDto(1L, "Laptop", 15000000.0, 10);
+        ProductDto p2 = new ProductDto(2L, "Mouse", 200000.0, 50);
 
+        List<ProductDto> products = Arrays.asList(p1, p2);
         PageImpl<ProductDto> page = new PageImpl<>(products, PageRequest.of(0, 10), products.size());
 
         when(productService.getAllProducts(any()))
@@ -63,9 +62,8 @@ class ProductControllerIntegrationTest {
     @Test
     @DisplayName("POST /api/products - Tao san pham moi")
     void testCreateProduct() throws Exception {
-        ProductDto request = new ProductDto("Keyboard", 500000, 20);
-        ProductDto response = new ProductDto("Keyboard", 500000, 20);
-        response.setId(1L);
+        ProductDto request = new ProductDto("Keyboard", 500000.0, 20);
+        ProductDto response = new ProductDto(1L, "Keyboard", 500000.0, 20);
 
         when(productService.createProduct(any()))
             .thenReturn(response);
@@ -81,8 +79,7 @@ class ProductControllerIntegrationTest {
     @Test
     @DisplayName("GET /api/products/{id} - Lay san pham theo id")
     void testGetProductById() throws Exception {
-        ProductDto product = new ProductDto("Monitor", 3000000, 15);
-        product.setId(2L);
+        ProductDto product = new ProductDto(2L, "Monitor", 3000000.0, 15);
 
         when(productService.getProductById(2L))
             .thenReturn(product);
@@ -96,9 +93,8 @@ class ProductControllerIntegrationTest {
     @Test
     @DisplayName("PUT /api/products/{id} - Cap nhat san pham")
     void testUpdateProduct() throws Exception {
-        ProductDto request = new ProductDto("Monitor", 2800000, 20);
-        ProductDto updated = new ProductDto("Monitor", 2800000, 20);
-        updated.setId(2L);
+        ProductDto request = new ProductDto("Monitor", 2800000.0, 20);
+        ProductDto updated = new ProductDto(2L, "Monitor", 2800000.0, 20);
 
         when(productService.updateProduct(eq(2L), any()))
             .thenReturn(updated);

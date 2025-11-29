@@ -12,13 +12,11 @@ jobs:
   test-login-flow:
     runs-on: ubuntu-latest
 
-    # Khởi tạo một service container cho database PostgreSQL
-    # Điều này cần thiết để backend có thể kết nối và chạy
     services:
       postgres:
         image: postgres:14
         env:
-          POSTGES_DB: flogin_db_ci
+          POSTGRES_DB: flogin_db_ci
           POSTGRES_USER: runner
           POSTGRES_PASSWORD: password
         ports:
@@ -49,10 +47,9 @@ jobs:
       - name: Install Frontend Dependencies
         run: npm install --prefix frontend
 
-      - name: Run Backend Tests
+      - name: Run Backend Unit Tests
         run: mvn -B test --file backend/pom.xml
         env:
-          # Cung cấp biến môi trường để backend kết nối đúng DB
           SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/flogin_db_ci
           SPRING_DATASOURCE_USERNAME: runner
           SPRING_DATASOURCE_PASSWORD: password
@@ -60,37 +57,30 @@ jobs:
       - name: Run Frontend Login Unit/Integration Tests
         run: npm test --prefix frontend -- src/pages/LoginPage/
 
-      # === PHẦN E2E ĐÃ ĐƯỢC SỬA LẠI HOÀN CHỈNH ===
-      - name: Run Frontend Login E2E Tests with Cypress
-        uses: cypress-io/github-action@v6
-        with:
-          working-directory: frontend
-          spec: cypress/e2e/login.cy.js # Chỉ chạy file test của Login
+      # === PHẦN E2E ĐÃ ĐƯỢC CẤU TRÚC LẠI ===
+      - name: Build Backend for E2E
+        run: mvn -B package --file backend/pom.xml -DskipTests
 
-          # Build backend ra file .jar trước
-          build: mvn -B package --file ../backend/pom.xml -DskipTests
-          
-          # Khởi động cả 2 server và đợi
-          start: |
-            java -jar ../backend/target/*.jar &
-            npm run dev &
-            npm install --prefix frontend wait-on && npx wait-on http://localhost:8080 http://localhost:5173
-
+      - name: Start Backend Server for E2E
+        run: java -jar backend/target/*.jar &
         env:
-          # Truyền biến môi trường cho cả backend và cypress
-          CYPRESS_BASE_URL: http://localhost:5173
           SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/flogin_db_ci
           SPRING_DATASOURCE_USERNAME: runner
           SPRING_DATASOURCE_PASSWORD: password
 
-      - name: Upload Backend Test Reports
-        if: always()
-        uses: actions/upload-artifact@v4
+      - name: Run Frontend Login E2E Tests with Cypress
+        uses: cypress-io/github-action@v6
         with:
-          name: backend-test-reports
-          path: backend/target/surefire-reports/
+          working-directory: frontend
+          # Bây giờ `start` chỉ cần khởi động frontend
+          start: npm run dev
+          wait-on: 'http://localhost:5173' # Chờ frontend sẵn sàng
+          spec: cypress/e2e/login.cy.js
+        env:
+          # Vẫn cần base_url để Cypress biết kết nối đến đâu
+          CYPRESS_BASE_URL: http://localhost:5173
 
-      - name: Upload Frontend E2E Test Artifacts
+      - name: Upload Artifacts on Failure
         if: failure()
         uses: actions/upload-artifact@v4
         with:
