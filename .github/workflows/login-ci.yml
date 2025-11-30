@@ -25,7 +25,7 @@ jobs:
           - 3306:3306 # Cổng mặc định của MySQL
         # Tùy chọn để kiểm tra sức khỏe, đảm bảo database sẵn sàng
         options: >-
-          --health-cmd "mysqladmin ping -h localhost -p${{ secrets.MYSQL_ROOT_PASSWORD }}"
+          --health-cmd "mysqladmin ping -h localhost -p$MYSQL_ROOT_PASSWORD"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
