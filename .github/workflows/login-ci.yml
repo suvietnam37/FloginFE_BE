@@ -65,6 +65,7 @@ jobs:
           java -jar backend/target/*.jar &
           npm run dev --prefix frontend &
         env:
+          SPRING_PROFILES_ACTIVE: ci 
           SPRING_DATASOURCE_URL: jdbc:mysql://localhost:3306/flogin_db
           SPRING_DATASOURCE_USERNAME: root
           SPRING_DATASOURCE_PASSWORD: suvietnam

@@ -83,6 +83,7 @@ jobs:
           echo "Running Cypress tests..."
           npm run test:e2e
         env:
+          SPRING_PROFILES_ACTIVE: ci 
           # Truyền biến môi trường cho cả backend và frontend/cypress
           SPRING_DATASOURCE_URL: jdbc:mysql://localhost:3306/flogin_db
           SPRING_DATASOURCE_USERNAME: root
