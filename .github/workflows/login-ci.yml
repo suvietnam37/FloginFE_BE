@@ -1,7 +1,7 @@
-# Tên của workflow
+# TRONG FILE: .github/workflows/login-ci.yml
+
 name: Login Tests CI
 
-# Kích hoạt workflow
 on:
   push:
     branches: [ main, develop ]
@@ -56,35 +56,32 @@ jobs:
       - name: Run Frontend Login Unit/Integration Tests
         run: npm test --prefix frontend -- src/pages/LoginPage/
 
-      # --- PHẦN E2E ĐÃ ĐƯỢC TÁCH RA THÀNH CÁC BƯỚC RIÊNG BIỆT ---
       - name: Build Backend for E2E
         run: mvn -B package --file backend/pom.xml -DskipTests
-
-      - name: Start Backend Server for E2E
-        # Chạy lệnh này từ thư mục gốc, nên đường dẫn là chính xác
-        run: java -jar backend/target/*.jar &
+      
+      - name: Start Servers for E2E
+        # Chạy cả hai server trong cùng một bước để chúng cùng tồn tại
+        run: |
+          java -jar backend/target/*.jar &
+          npm run dev --prefix frontend &
         env:
           SPRING_DATASOURCE_URL: jdbc:mysql://localhost:3306/flogin_db
           SPRING_DATASOURCE_USERNAME: root
           SPRING_DATASOURCE_PASSWORD: suvietnam
-      
-      # Bước cài đặt wait-on riêng
-      - name: Install wait-on
-        run: npm install --prefix frontend wait-on
-      
-      # Bước chờ server sẵn sàng
-      - name: Wait for Servers to be ready
-        run: npx wait-on http://localhost:8080 http://localhost:5173 -t 60000
-        working-directory: frontend # Chạy lệnh này từ thư mục frontend
 
-      # Bước cuối cùng: chỉ chạy Cypress
+      - name: Wait for Servers to be ready
+        # Chạy lệnh này từ thư mục gốc, nhưng cần cài wait-on trước
+        run: |
+          npm install --prefix frontend wait-on
+          npx wait-on http://localhost:5173 http-get://localhost:8080/actuator/health -t 90000
+        working-directory: frontend
+
       - name: Run Frontend Login E2E Tests with Cypress
+        # Bước này chỉ còn nhiệm vụ chạy Cypress
         uses: cypress-io/github-action@v6
         with:
           working-directory: frontend
-          # Bây giờ không cần start nữa vì server đã chạy
-          # Chỉ cần chạy lệnh test
-          command: npm run test:e2e
+          command: npm run test:e2e # Chỉ chạy test, không start server nữa
           spec: cypress/e2e/login.cy.js
         env:
           CYPRESS_BASE_URL: http://localhost:5173
