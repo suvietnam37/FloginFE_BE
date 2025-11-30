@@ -16,14 +16,27 @@ function ProductPage() {
   // Hàm tải danh sách sản phẩm từ API
   const loadProducts = async () => {
     try {
-      const response = await productService.getAllProducts();
-      // API trả về đối tượng Page, lấy mảng sản phẩm từ trường 'content'
-      setProducts(response.data.content || []);
+      const res = await productService.getAllProducts();
+      
+      // IN RA ĐỂ DEBUG
+      console.log('API Response:', res.data); 
+      
+      // Logic xử lý response có đúng không?
+      // Nếu backend trả về Page object, bạn cần lấy 'content'
+      const productsData = res.data.content; 
+      
+      // Kiểm tra xem productsData có phải là một mảng không
+      if (Array.isArray(productsData)) {
+        setProducts(productsData);
+      } else {
+        console.error("Dữ liệu nhận được không phải là một mảng!", res.data);
+        setProducts([]); // Set thành mảng rỗng để tránh lỗi
+      }
+
     } catch (error) {
       console.error("Lỗi khi tải danh sách sản phẩm:", error);
-      alert("Không thể tải danh sách sản phẩm.");
     }
-  };
+};
 
   // Hàm được gọi khi form (ProductForm) được submit
   const handleFormSubmit = async (productData, id) => {

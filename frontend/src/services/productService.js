@@ -1,15 +1,14 @@
-// Trong file: services/productService.js
+// TRONG FILE: frontend/src/services/productService.js
 import axios from 'axios';
 
 const API_URL = 'http://localhost:8080/api/products';
 
-const createProduct = (productData) => {
-    // productData là một object, ví dụ: { name: '...', price: ..., quantity: ... }
-    return axios.post(API_URL, productData);
+const getAllProducts = (page = 0, size = 20) => {
+    return axios.get(`${API_URL}?page=${page}&size=${size}`);
 };
 
-const getAllProducts = () => {
-    return axios.get(API_URL);
+const createProduct = (productData) => {
+    return axios.post(API_URL, productData);
 };
 
 const updateProduct = (id, productData) => {
@@ -21,10 +20,10 @@ const deleteProduct = (id) => {
 };
 
 const productService = {
-    createProduct: async (data) => ({ data: { ...data, id: Date.now() } }),
-    getAllProducts: async () => ({ data: [] }),
+    getAllProducts,
+    createProduct,
     updateProduct,
-    deleteProduct: async (id) => ({})
+    deleteProduct,
 };
 
 export default productService;
