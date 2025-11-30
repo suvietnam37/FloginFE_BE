@@ -1,15 +1,3 @@
-# Bài tập lớn môn Kiểm thử Phần mềm - Ứng dụng Flogin
-**Niên khóa 2024-2025 - Trường Đại học Sài Gòn**
-
-**Flogin** là một ứng dụng web full-stack được phát triển nhằm mục đích thực hành và áp dụng các kỹ thuật kiểm thử phần mềm hiện đại. Ứng dụng bao gồm hai chức năng chính:
-- Hệ thống **Đăng nhập / Đăng ký** người dùng (xác thực bằng JWT)
-- Quản lý **Sản phẩm** (CRUD hoàn chỉnh)
-
-[![CI/CD Pipeline](https://github.com/suvietnam37/FloginFE_BE/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/suvietnam37/FloginFE_BE/actions/workflows/ci.yml)
-
-## Mục lục
-- [Giới thiệu](#giới-thiệu)
-<!-- README cho FloginFE_BE - bản tiếng Việt, đủ thông tin cơ bản -->
 # Flogin — Bài tập lớn môn Kiểm thử Phần mềm
 
 **Niên khóa 2024-2025 — Trường Đại học Sài Gòn**
@@ -162,13 +150,9 @@ Nếu bạn chỉ muốn README (không làm gì khác), nhận biết:
 
 ## Thành viên nhóm
 
-| STT | Họ và tên | MSSV | Vai trò |
-|---:|---|---:|---|
-| 1 | Sử Việt Nam | 3123410230 | Nhóm trưởng, Backend, CI/CD |
-| 2 | Nguyễn Phạm Cao Khả | 3123410144 | Frontend, Cypress E2E |
-| 3 | Võ Hoàng Phúc Hy | 3123410142 | Backend Testing, Performance |
-| 4 | Trịnh Thế Minh | 3123410224 | Frontend Testing, Documentation |
-
----
-
-Cảm ơn thầy cô và các bạn đã quan tâm!
+| STT | Họ và tên | MSSV |
+|---:|---|---:|
+| 1 | Sử Việt Nam | 3123410230 |
+| 2 | Nguyễn Phạm Cao Khả | 3123410144 |
+| 3 | Võ Hoàng Phúc Hy | 3123410142 | 
+| 4 | Trịnh Thế Minh | 3123410224 | 
