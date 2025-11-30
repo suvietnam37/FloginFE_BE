@@ -12,17 +12,17 @@ jobs:
   build-and-test:
     runs-on: ubuntu-latest
 
+    # --- THAY ĐỔI 1: SỬ DỤNG SERVICE MYSQL ---
     services:
-      postgres:
-        image: postgres:14
+      mysql:
+        image: mysql:8.0
         env:
-          POSTGRES_DB: flogin_db_ci
-          POSTGRES_USER: runner
-          POSTGRES_PASSWORD: password
+          MYSQL_ROOT_PASSWORD: suvietnam # Giữ đơn giản cho CI
+          MYSQL_DATABASE: flogin_db
         ports:
-          - 5432:5432
+          - 3306:3306
         options: >-
-          --health-cmd pg_isready
+          --health-cmd "mysqladmin ping -h localhost -p${{ secrets.MYSQL_ROOT_PASSWORD }}"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
@@ -37,48 +37,41 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
       
-      # SỬA LỖI 1: Nâng cấp phiên bản Node.js
       - name: Set up Node.js 20
         uses: actions/setup-node@v4
         with:
-          node-version: '20' # Sử dụng phiên bản 20
+          node-version: '20'
           cache: 'npm'
           cache-dependency-path: frontend/package-lock.json
 
       - name: Backend Tests
         run: mvn -B test --file backend/pom.xml
         env:
-          SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/flogin_db_ci
-          SPRING_DATASOURCE_USERNAME: runner
-          SPRING_DATASOURCE_PASSWORD: password
+          # --- THAY ĐỔI 2: CẬP NHẬT BIẾN MÔI TRƯỜNG CHO MYSQL ---
+          SPRING_DATASOURCE_URL: jdbc:mysql://localhost:3306/flogin_db
+          SPRING_DATASOURCE_USERNAME: root
+          SPRING_DATASOURCE_PASSWORD: suvietnam
 
       - name: Frontend Install & Unit Tests
         run: |
           npm install --prefix frontend
           npm test --prefix frontend
 
-      # SỬA LỖI 2: Cấu trúc lại bước E2E
       - name: Frontend E2E Tests (Cypress)
         run: |
-          # Bước 1: Build backend
           echo "Building backend..."
           mvn -B package --file backend/pom.xml -DskipTests
-          
-          # Bước 2: Khởi động backend ở chế độ nền
           echo "Starting backend server..."
           java -jar backend/target/*.jar &
-          
-          # Bước 3: Cài đặt wait-on và chạy E2E
           echo "Installing wait-on and running E2E tests..."
           cd frontend
           npm install wait-on
           npx wait-on http://localhost:8080 && npm run test:e2e
         env:
-          # Truyền biến môi trường cho cả backend và frontend/cypress
-          SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/flogin_db_ci
-          SPRING_DATASOURCE_USERNAME: runner
-          SPRING_DATASOURCE_PASSWORD: password
-          # Cypress sẽ tự động đọc biến môi trường này nếu có
+          # --- THAY ĐỔI 3: CẬP NHẬT BIẾN MÔI TRƯỜNG CHO MYSQL ---
+          SPRING_DATASOURCE_URL: jdbc:mysql://localhost:3306/flogin_db
+          SPRING_DATASOURCE_USERNAME: root
+          SPRING_DATASOURCE_PASSWORD: suvietnam
           CYPRESS_BASE_URL: http://localhost:5173
 
       - name: Upload Test Artifacts on Failure
