@@ -1,7 +1,7 @@
-# Tên của workflow, sẽ hiển thị trên tab "Actions" của GitHub
+# Tên của workflow
 name: Login Tests CI
 
-# Định nghĩa các sự kiện sẽ kích hoạt workflow này
+# Kích hoạt workflow
 on:
   push:
     branches: [ main, develop ]
@@ -9,34 +9,27 @@ on:
     branches: [ main ]
 
 jobs:
-  # Tên của job
   test-login-flow:
-    # Chạy job trên máy ảo Ubuntu phiên bản mới nhất
     runs-on: ubuntu-latest
 
-    # --- THAY ĐỔI 1: SỬ DỤNG SERVICE MYSQL ---
     services:
-      mysql: # Đổi tên service cho rõ ràng
-        image: mysql:8.0 # Sử dụng image MySQL
+      mysql:
+        image: mysql:8.0
         env:
           MYSQL_ROOT_PASSWORD: suvietnam
           MYSQL_DATABASE: flogin_db
         ports:
-          - 3306:3306 # Cổng mặc định của MySQL
-        # Tùy chọn để kiểm tra sức khỏe, đảm bảo database sẵn sàng
+          - 3306:3306
         options: >-
           --health-cmd "mysqladmin ping -h localhost -p$MYSQL_ROOT_PASSWORD"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
 
-    # Định nghĩa các bước tuần tự trong job
     steps:
-      # Bước 1: Lấy mã nguồn
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Bước 2: Cài đặt môi trường
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
@@ -50,43 +43,51 @@ jobs:
           cache: 'npm'
           cache-dependency-path: frontend/package-lock.json
 
-      # Bước 3: Cài đặt dependencies Frontend
       - name: Install Frontend Dependencies
         run: npm install --prefix frontend
 
-      # Bước 4: Chạy Test Backend
-      - name: Run Backend Tests
+      - name: Run Backend Unit Tests
         run: mvn -B test --file backend/pom.xml
         env:
-          # --- THAY ĐỔI 2: CẬP NHẬT BIẾN MÔI TRƯỜNG CHO MYSQL ---
           SPRING_DATASOURCE_URL: jdbc:mysql://localhost:3306/flogin_db
           SPRING_DATASOURCE_USERNAME: root
           SPRING_DATASOURCE_PASSWORD: suvietnam
 
-      # Bước 5: Chạy Test Frontend Login
       - name: Run Frontend Login Unit/Integration Tests
         run: npm test --prefix frontend -- src/pages/LoginPage/
 
-      # Bước 6: Build Backend cho E2E
+      # --- PHẦN E2E ĐÃ ĐƯỢC TÁCH RA THÀNH CÁC BƯỚC RIÊNG BIỆT ---
       - name: Build Backend for E2E
         run: mvn -B package --file backend/pom.xml -DskipTests
 
-      # Bước 7: Chạy E2E Test Login
+      - name: Start Backend Server for E2E
+        # Chạy lệnh này từ thư mục gốc, nên đường dẫn là chính xác
+        run: java -jar backend/target/*.jar &
+        env:
+          SPRING_DATASOURCE_URL: jdbc:mysql://localhost:3306/flogin_db
+          SPRING_DATASOURCE_USERNAME: root
+          SPRING_DATASOURCE_PASSWORD: suvietnam
+      
+      # Bước cài đặt wait-on riêng
+      - name: Install wait-on
+        run: npm install --prefix frontend wait-on
+      
+      # Bước chờ server sẵn sàng
+      - name: Wait for Servers to be ready
+        run: npx wait-on http://localhost:8080 http://localhost:5173 -t 60000
+        working-directory: frontend # Chạy lệnh này từ thư mục frontend
+
+      # Bước cuối cùng: chỉ chạy Cypress
       - name: Run Frontend Login E2E Tests with Cypress
         uses: cypress-io/github-action@v6
         with:
           working-directory: frontend
+          # Bây giờ không cần start nữa vì server đã chạy
+          # Chỉ cần chạy lệnh test
+          command: npm run test:e2e
           spec: cypress/e2e/login.cy.js
-          start: |
-            java -jar ../backend/target/*.jar &
-            npm run dev &
-            npm install --prefix frontend wait-on && npx wait-on http://localhost:8080 http://localhost:5173
         env:
-          # --- THAY ĐỔI 3: CẬP NHẬT BIẾN MÔI TRƯỜNG CHO MYSQL ---
           CYPRESS_BASE_URL: http://localhost:5173
-          SPRING_DATASOURCE_URL: jdbc:mysql://localhost:3306/flogin_db
-          SPRING_DATASOURCE_USERNAME: root
-          SPRING_DATASOURCE_PASSWORD: suvietnam
 
       # Bước 8: Lưu lại các "artifact" (kết quả) để debug
       # Upload báo cáo test của Maven (backend)
