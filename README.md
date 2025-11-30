@@ -9,153 +9,166 @@
 
 ## Mục lục
 - [Giới thiệu](#giới-thiệu)
-- [Công nghệ sử dụng](#công-nghệ-sử-dụng)
+<!-- README cho FloginFE_BE - bản tiếng Việt, đủ thông tin cơ bản -->
+# Flogin — Bài tập lớn môn Kiểm thử Phần mềm
+
+**Niên khóa 2024-2025 — Trường Đại học Sài Gòn**
+
+Flogin là một ứng dụng web full-stack phục vụ mục đích học tập và kiểm thử: gồm tính năng xác thực người dùng (JWT) và quản lý sản phẩm (CRUD).
+
+[![CI/CD Pipeline](https://github.com/suvietnam37/FloginFE_BE/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/suvietnam37/FloginFE_BE/actions/workflows/ci.yml)
+
+## Mục lục
+- [Giới thiệu](#giới-thiệu)
+- [Công nghệ](#công-nghệ)
 - [Cấu trúc dự án](#cấu-trúc-dự-án)
-- [Hướng dẫn cài đặt và chạy ứng dụng](#hướng-dẫn-cài-đặt-và-chạy-ứng-dụng)
-  - [Yêu cầu hệ thống](#yêu-cầu-hệ-thống)
-  - [Các bước cài đặt](#các-bước-cài-đặt)
-  - [Chạy ứng dụng](#chạy-ứng-dụng)
-- [Hướng dẫn chạy kiểm thử](#hướng-dẫn-chạy-kiểm-thử)
-  - [Backend Testing](#backend-testing)
-  - [Frontend Testing](#frontend-testing)
-  - [End-to-End Testing (Cypress)](#end-to-end-testing-cypress)
-  - [Performance Testing (k6)](#performance-testing-k6)
-- [CI/CD Pipeline](#cicd-pipeline)
+- [Yêu cầu & Cài đặt nhanh](#yêu-cầu--cài-đặt-nhanh)
+- [Cấu hình database](#cấu-hình-database)
+- [Chạy ứng dụng (phát triển)](#chạy-ứng-dụng-phát-triển)
+- [Kiểm thử & Coverage](#kiểm-thử--coverage)
+- [Nâng cấp Java lên Java 21 (LTS)](#nâng-cấp-java-lên-java-21-lts)
+- [CI/CD](#cicd)
 - [Thành viên nhóm](#thành-viên-nhóm)
 
 ## Giới thiệu
 
-Dự án là bài tập lớn môn **Kiểm thử Phần mềm** tại Trường Đại học Sài Gòn. Mục tiêu chính là xây dựng một ứng dụng web hoàn chỉnh và áp dụng đầy đủ các cấp độ kiểm thử theo mô hình **Pyramid Testing**:
+Ứng dụng gồm:
+- Đăng ký / Đăng nhập (JWT)
+- Quản lý Sản phẩm (CRUD)
 
-| Cấp độ kiểm thử         | Công cụ sử dụng                  | Mục tiêu đạt được |
-|-------------------------|-----------------------------------|-------------------|
-| Unit Testing            | JUnit 5 + Mockito, Vitest         | > 80% coverage    |
-| Integration Testing     | Spring Boot Test, MockMvc         | Kiểm tra luồng API |
-| Component Testing       | React Testing Library             | Kiểm tra UI component |
-| End-to-End Testing      | Cypress                           | Kiểm tra toàn bộ flow người dùng |
-| Performance Testing     | k6                                | Đánh giá tải API  |
-| Security Testing        | OWASP ZAP (manual) + kiểm tra JWT | Phát hiện lỗ hổng cơ bản |
-| Code Coverage           | JaCoCo (Backend), Vitest Coverage (Frontend) | Báo cáo chi tiết |
+Mục tiêu bài tập: xây dựng ứng dụng mẫu và áp dụng các kỹ thuật kiểm thử (unit, integration, component, E2E, performance).
 
-## Công nghệ sử dụng
+## Công nghệ
 
-### Backend
-- Java 17 + Spring Boot 3.x
-- Spring Security + JWT Authentication
-- Spring Data JPA (Hibernate)
-- MySQL
-- Maven
-- JUnit 5, Mockito, MockMvc, Spring Boot Test
-- JaCoCo (code coverage)
+- Backend: Java, Spring Boot, Spring Security, Spring Data JPA, MySQL, Maven
+- Frontend: React 18, Vite, Axios
+- Testing: JUnit 5, Mockito, MockMvc (backend); Vitest, React Testing Library (frontend); Cypress (E2E)
+- CI/CD: GitHub Actions
+- Performance: k6
 
-### Frontend
-- React 18 + Vite
-- React Router DOM v6
-- Axios
-- Tailwind CSS (hoặc CSS Modules)
-- Vitest + React Testing Library
-- Cypress
+## Cấu trúc dự án (tóm tắt)
 
-### DevOps & Tools
-- Git & GitHub
-- GitHub Actions (CI/CD)
-- k6 (Performance Testing)
-- Docker (tùy chọn chạy MySQL)
-
-## Cấu trúc dự án
+```
 FloginFE_BE/
-├── .github/workflows/          # CI/CD pipelines
-├── backend/                    # Spring Boot Backend
-│   ├── src/main/java/...
-│   ├── src/test/java/...
-│   └── pom.xml
-├── frontend/                   # React Frontend (Vite)
-│   ├── src/...
-│   ├── tests/...
-│   ├── cypress/...
-│   └── vite.config.ts
-├── performance-tests/         # k6 scripts
-│   ├── login-test.js
-│   └── product-test.js
-└── README.md
-text## Hướng dẫn cài đặt và chạy ứng dụng
+├─ backend/                # Spring Boot app (Maven)
+├─ frontend/               # React + Vite app
+├─ performance-tests/      # k6 scripts
+└─ .github/                # workflows, upgrade plan
+```
 
-### Yêu cầu hệ thống
+## Yêu cầu & Cài đặt nhanh (Windows PowerShell)
+
 - Git
-- JDK 17
-- Apache Maven 3.8+
-- Node.js 20+
-- MySQL 8.0+ (hoặc Docker)
-- k6 (cho performance test)
+- JDK 17 hoặc JDK 21 (nếu nâng cấp)
+- Maven 3.8+
+- Node.js 18+
+- MySQL 8+
 
-### Các bước cài đặt
+```powershell
+git clone https://github.com/suvietnam37/FloginFE_BE.git
+cd FloginFE_BE
 
-1. **Clone repository**
-   ```bash
-   git clone https://github.com/suvietnam37/FloginFE_BE.git
-   cd FloginFE_BE
+# Backend
+cd backend
+./mvnw.cmd -DskipTests clean install
 
-Cấu hình cơ sở dữ liệu
-Tạo database tên flogin_db trong MySQL
-Chỉnh sửa file:textbackend/src/main/resources/application.propertiespropertiesspring.datasource.url=jdbc:mysql://localhost:3306/flogin_db?useSSL=false&allowPublicKeyRetrieval=true
+# Frontend (mở terminal khác)
+cd ..\frontend
+npm install
+```
+
+## Cấu hình database
+
+Tạo database (ví dụ `flogin_db`) và chỉnh `backend/src/main/resources/application.properties`:
+
+```properties
+spring.datasource.url=jdbc:mysql://localhost:3306/flogin_db?useSSL=false&allowPublicKeyRetrieval=true
 spring.datasource.username=root
 spring.datasource.password=your_password
 spring.jpa.hibernate.ddl-auto=update
+```
 
-Cài đặt dependenciesBackend:Bashcd backend
-mvn clean installFrontend:Bashcd ../frontend
-npm install
+## Chạy ứng dụng (phát triển)
 
-Chạy ứng dụng
-Mở 2 terminal riêng biệt:
-Terminal 1 - Backend (port 8080)
-Bashcd backend
-mvn spring-boot:run
-Terminal 2 - Frontend (port 5173)
-Bashcd frontend
+```powershell
+# Terminal 1: Backend
+cd backend
+./mvnw.cmd spring-boot:run
+
+# Terminal 2: Frontend
+cd frontend
 npm run dev
-Truy cập ứng dụng tại: http://localhost:5173
-Hướng dẫn chạy kiểm thử
-Backend Testing
-Bashcd backend
+```
 
-Chạy tất cả Unit + Integration Tests:Bashmvn test
-Chạy test + tạo báo cáo coverage (JaCoCo):Bashmvn clean verify→ Mở báo cáo: backend/target/site/jacoco/index.html
+Truy cập: http://localhost:5173
 
-Frontend Testing
-Bashcd frontend
+## Kiểm thử & Coverage
 
-Chạy Unit & Component Tests (Vitest):Bashnpm test
-Chạy test + báo cáo coverage:Bashnpm run coverage
+### Backend
 
-End-to-End Testing (Cypress)
-Yêu cầu: Cả Backend và Frontend phải đang chạy
-Bashcd frontend
+```powershell
+cd backend
+./mvnw.cmd test
+# tạo báo cáo coverage
+./mvnw.cmd clean verify
+# báo cáo JaCoCo: backend/target/site/jacoco/index.html
+```
 
-Chạy headless (CI/CD):Bashnpm run test:e2e
-Chạy giao diện tương tác:Bashnpx cypress open
+### Frontend
 
-Performance Testing (k6)
-Yêu cầu: Backend phải đang chạy
-Bashcd performance-tests
+```powershell
+cd frontend
+npm test
+npm run coverage
+```
 
-Test hiệu năng API Login:Bashk6 run login-test.js
-Test hiệu năng API Product:Bashk6 run product-test.js
+### E2E (Cypress)
 
-CI/CD Pipeline
-Pipeline tự động chạy trên mọi push/PR vào nhánh main:
+Yêu cầu: Backend + Frontend đang chạy.
 
-Build backend + frontend
-Chạy toàn bộ unit & integration tests
-Tạo code coverage report
-Chạy E2E tests (headless)
-Badge trạng thái hiển thị trên README
+```powershell
+cd frontend
+npm run test:e2e   # headless
+npx cypress open    # tương tác
+```
 
-Xem chi tiết: GitHub Actions
-Thành viên nhóm
-STT,Họ và tên,MSSV,Vai trò chính
-1,Sử Việt Nam,3123410230,"Nhóm trưởng, Backend, CI/CD"
-2,Nguyễn Phạm Cao Khả,3123410144,"Frontend, Cypress E2E"
-3,Võ Hoàng Phúc Hy,3123410142,"Backend Testing, Performance"
-4,Trịnh Thế Minh,3123410224,"Frontend Testing, Documentation"
-Cảm ơn thầy cô và các bạn đã xem dự án!
+### Performance (k6)
+
+```powershell
+cd performance-tests
+k6 run login-test.js
+k6 run product-test.js
+```
+
+## Nâng cấp Java lên Java 21 (LTS)
+
+Ghi chú nhanh:
+
+- `backend/pom.xml` hiện dùng `<java.version>17</java.version>` và `maven-compiler-plugin` source/target = 17.
+- Công cụ nâng cấp đã tạo kế hoạch tại:
+
+```
+backend/.github/java-upgrade/20251130102302/plan.md
+```
+
+Nếu bạn chỉ muốn README (không làm gì khác), nhận biết:
+
+- Để thực sự build bằng Java 21, cần cài JDK 21 và cập nhật `pom.xml` (thay `<java.version>` và plugin compiler thành 21).
+- Hoặc chạy OpenRewrite upgrade theo `plan.md` để tự động sửa code nếu cần.
+
+## CI/CD
+
+- Pipeline GitHub Actions (nhánh `main`) build + test + coverage + E2E.
+
+## Thành viên nhóm
+
+| STT | Họ và tên | MSSV | Vai trò |
+|---:|---|---:|---|
+| 1 | Sử Việt Nam | 3123410230 | Nhóm trưởng, Backend, CI/CD |
+| 2 | Nguyễn Phạm Cao Khả | 3123410144 | Frontend, Cypress E2E |
+| 3 | Võ Hoàng Phúc Hy | 3123410142 | Backend Testing, Performance |
+| 4 | Trịnh Thế Minh | 3123410224 | Frontend Testing, Documentation |
+
+---
+
+Cảm ơn thầy cô và các bạn đã quan tâm!
