@@ -150,9 +150,9 @@ Nếu bạn chỉ muốn README (không làm gì khác), nhận biết:
 
 ## Thành viên nhóm
 
-| STT | Họ và tên | MSSV |
-|---:|---|---:|
-| 1 | Sử Việt Nam | 3123410230 |
-| 2 | Nguyễn Phạm Cao Khả | 3123410144 |
-| 3 | Võ Hoàng Phúc Hy | 3123410142 | 
-| 4 | Trịnh Thế Minh | 3123410224 | 
+| STT | Họ và tên | MSSV | Nhiệm vụ |
+|---:|---|---:| ---:|
+| 1 | Sử Việt Nam | 3123410230 | Phân tích và Thiết kế Test Cases, Unit Tests, Security Testing, Viết báo cáo |
+| 2 | Nguyễn Phạm Cao Khả | 3123410144 | Mock Testing, Performance Testing, Giao diện Product |
+| 3 | Võ Hoàng Phúc Hy | 3123410142 | Automation Testing và CI/CD |
+| 4 | Trịnh Thế Minh | 3123410224 | Integration Testing, Giao diện Login |
